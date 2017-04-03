@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="/home/unencr/Prog_projects/hello_interprocess" name="0">
+      <in>main_a.c</in>
+      <in>main_b.c</in>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>/home/unencr/Prog_projects/hello_interprocess/Makefile</itemPath>
+      <itemPath>/home/unencr/Prog_projects/hello_interprocess/nbproject/private/launcher.properties</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>/home/unencr/Prog_projects/hello_interprocess</Elem>
+  </sourceRootList>
+  <projectmakefile>/home/unencr/Prog_projects/hello_interprocess/Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <compilerSet>default</compilerSet>
+        <dependencyChecking>false</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
+      </toolsSet>
+      <flagsDictionary>
+        <element flagsID="0" commonFlags="-std=c11 -g"/>
+      </flagsDictionary>
+      <codeAssistance>
+      </codeAssistance>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>/home/unencr/Prog_projects/hello_interprocess</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Makefile</buildCommand>
+          <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
+          <executablePath></executablePath>
+          <cTool>
+            <incDir>
+              <pElem>.</pElem>
+            </incDir>
+          </cTool>
+        </makeTool>
+        <preBuild>
+          <preBuildCommandWorkingDir>.</preBuildCommandWorkingDir>
+          <preBuildCommand></preBuildCommand>
+        </preBuild>
+      </makefileType>
+      <item path="/home/unencr/Prog_projects/hello_interprocess/main_a.c"
+            ex="false"
+            tool="0"
+            flavor2="10">
+        <cTool flags="0">
+        </cTool>
+      </item>
+      <item path="/home/unencr/Prog_projects/hello_interprocess/main_b.c"
+            ex="false"
+            tool="0"
+            flavor2="10">
+        <cTool flags="0">
+        </cTool>
+      </item>
+    </conf>
+  </confs>
+</configurationDescriptor>
