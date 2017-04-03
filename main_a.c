@@ -3,6 +3,9 @@
 #include <stdlib.h>
 //#include "apue.h"
 #include <unistd.h>
+#include <errno.h>
+#include <bits/errno.h>
+
 enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
@@ -33,10 +36,9 @@ int main0()
     return 0;
 }
 
-
 int main(void)
 {
-	//int n;
+	int n = EACCES;
 	
 	int fd[2];
 	pid_t pid; 
@@ -54,11 +56,15 @@ int main(void)
 	} else { /* до­чер­ний про­цесс */ 
 		close(fd[1]); 
 		//MAXLINE,
-		sprintf(line,  "%d" ,  fd[0]);
+		//sprintf(line,  "%d" ,  fd[0]);
 		int nres = execl( "/./main_b", line, (char *)0 );
 		if (nres< 0)
-			err_sys("ошиб­ка вы­зо­ва функ­ции execlp");
-		//n = read(, line, MAXLINE); 
+		{
+			printf(" err = %d", errno);
+				err_sys("ошиб­ка вы­зо­ва функ­ции execlp");
+				
+		}
+		n = read(fd[0], line, MAXLINE); 
 	  
 		//write(STDOUT_FILENO, line, n); 
 	} 
