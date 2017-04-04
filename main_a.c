@@ -29,10 +29,11 @@ int main(void) {
     //int fd[2];
     //pid_t pid; 
     //char line[MAXLINE];
-    execlp("sh", "-v", "-c" , //"target_dir/bin/"
-            "main_b", (char*)0);
+    //execlp("sh", "-v", "-c" , //"ls",  
+    //        "$PWD/target_bin/bin/"         "main_b",
+    //        (char*)0);
     FILE* ppf = popen(//"ls"
-            "target_dir/bin/main_b"
+            "target_bin/bin/main_b"
             , "w");
     if (NULL == ppf ) {
         err_show("popen error");
@@ -44,9 +45,9 @@ int main(void) {
         //gets( buff);
         puts(" Insert number");
         int32_t i = 0;
-        scanf("%d", &i);
+        scanf("%+"SCNi32, &i);
         //= atoi(buff);
-        printf(" Inserted number: %d\n", i);
+        printf(" Inserted number: %"PRId32"\n", i);
         nbytes = write( fp,&i, sizeof(i));
         if (nbytes == -1)
             err_show("error pipe write");
