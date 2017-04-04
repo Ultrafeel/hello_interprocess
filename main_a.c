@@ -1,11 +1,10 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 //#include "apue.h"
 #include <unistd.h>
 #include <errno.h>
 #include <bits/errno.h>
-
+#include  <stdint.h>
 enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
@@ -18,62 +17,42 @@ void err_sys(char const* str)
 {
 	puts(str);
 }
-int main0()
-{	
-	
-	
-	
-	//char buff[BUFF_SIZE] = "";
-	//gets( buff);
-	puts(" Insert number" );
-	int i = 0;
-	scanf("%d", &i);
-	//= atoi(buff);
-	printf(" Inserted number: %d\n" , i);
-	
-	
-	
-    return 0;
+void err_show(char const* str)
+{     
+    printf("error: %s . erro = %d\n", str, errno);
 }
 
-int main(void)
-{
-	//int n = EACCES;
-	
-	int fd[2];
-	pid_t pid; 
-	char line[MAXLINE]; 
-	if (pipe(fd) < 0)
-		err_sys("ошиб­ка вы­зо­ва функ­ции pipe");
-	if ((pid = fork()) < 0) 
-	{ 
-		  err_sys("ошиб­ка вы­зо­ва функ­ции fork");
-	} 
-	else if (pid > 0) {
-		 /* ро­ди­тель­ский про­цесс */ 
-		close(fd[0]);
-		write(fd[1], "123 mmmmmm himmm\n", 11);
-	} else { /* до­чер­ний про­цесс */ 
-		close(fd[1]); 
-		//MAXLINE,
-		sprintf(line,  "%d" ,  fd[0]);
-                const char * path = "target_bin/bin/main_b";
 
-		int nres = execlp( //"/bin/sh", "sh", "-c",
-                   path, path   //  "/home/unencr/Prog_projects/hello_interprocess/target_bin/bin/main_a"
-                , line,
-                (char *)0 );
-		if (nres< 0)
-		{
-			printf("erro = %d\n", errno);
-				err_sys("ошиб­ка вы­зо­ва функ­ции execlp");
-				
-		}
-		//n = 
-                        read(fd[0], line, MAXLINE); 
-	  
-		//write(STDOUT_FILENO, line, n); 
-	} 
-	exit(0);
+int main(void) {
+    //int n = EACCES;
+
+    //int fd[2];
+    //pid_t pid; 
+    //char line[MAXLINE];
+    execlp("sh", "-v", "-c" , //"target_dir/bin/"
+            "main_b", (char*)0);
+    FILE* ppf = popen(//"ls"
+            "target_dir/bin/main_b"
+            , "w");
+    if (NULL == ppf ) {
+        err_show("popen error");
+        exit(1);
+     }
+    int fp = fileno(ppf);
+    int nbytes = -1;
+    do {//char buff[BUFF_SIZE] = "";
+        //gets( buff);
+        puts(" Insert number");
+        int32_t i = 0;
+        scanf("%d", &i);
+        //= atoi(buff);
+        printf(" Inserted number: %d\n", i);
+        nbytes = write( fp,&i, sizeof(i));
+        if (nbytes == -1)
+            err_show("error pipe write");
+    } while (nbytes != -1);
+    if (pclose(ppf) == -1)
+       err_show("calling pclose");
+    exit(0);
 }
 

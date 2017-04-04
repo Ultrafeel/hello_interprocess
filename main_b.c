@@ -26,6 +26,9 @@
 #include <stdlib.h>
 
 #include <unistd.h>
+#include  <stdint.h>
+#include <inttypes.h>
+
 enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
@@ -34,23 +37,22 @@ int main(int argc, char **argv)
 {
 	puts(" Hello" );
 	
-	if (argc < 2){
-            	printf(" Hello = |%s|", argv[0] );
+	if (argc > 0){
+	printf(" Hello, fd = %s", argv[1] );
 
-		puts(" too few args");
-		exit(1);
 	}
 		
-	printf(" Hello, fd = %s", argv[1] );
-	int fd = atoi(argv[1]);
-		char line[MAXLINE]; 
-        printf(" Hello, parsed fd = %d\n", fd );
-
-	int n = read(fd, line, MAXLINE); 
-	  
-	write(STDOUT_FILENO, line, n); 
-	int i = 0;
-	scanf("%d", &i);
+         int32_t i;   
+	int n = -1;
+        do
+        {
+             n = read(STDIN_FILENO, &i, sizeof(i));
+             printf(" number recieved: %+"PRId32, i);
+	}
+        while(n != -1);
+	//write(STDOUT_FILENO, line, n); 
+	//int i = 0;
+	//scanf("%d", &i);
 	return 0;
 }
 
