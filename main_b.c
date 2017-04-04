@@ -35,6 +35,8 @@ int main(int argc, char **argv)
 	puts(" Hello" );
 	
 	if (argc < 2){
+            	printf(" Hello = |%s|", argv[0] );
+
 		puts(" too few args");
 		exit(1);
 	}
@@ -42,6 +44,8 @@ int main(int argc, char **argv)
 	printf(" Hello, fd = %s", argv[1] );
 	int fd = atoi(argv[1]);
 		char line[MAXLINE]; 
+        printf(" Hello, parsed fd = %d\n", fd );
+
 	int n = read(fd, line, MAXLINE); 
 	  
 	write(STDOUT_FILENO, line, n); 

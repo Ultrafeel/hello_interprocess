@@ -38,7 +38,7 @@ int main0()
 
 int main(void)
 {
-	int n = EACCES;
+	//int n = EACCES;
 	
 	int fd[2];
 	pid_t pid; 
@@ -52,19 +52,25 @@ int main(void)
 	else if (pid > 0) {
 		 /* ро­ди­тель­ский про­цесс */ 
 		close(fd[0]);
-		write(fd[1], "при­вет, МИР\n", 11);
+		write(fd[1], "123 mmmmmm himmm\n", 11);
 	} else { /* до­чер­ний про­цесс */ 
 		close(fd[1]); 
 		//MAXLINE,
-		//sprintf(line,  "%d" ,  fd[0]);
-		int nres = execl( "/./main_b", line, (char *)0 );
+		sprintf(line,  "%d" ,  fd[0]);
+                const char * path = "target_bin/bin/main_b";
+
+		int nres = execlp( //"/bin/sh", "sh", "-c",
+                   path, path   //  "/home/unencr/Prog_projects/hello_interprocess/target_bin/bin/main_a"
+                , line,
+                (char *)0 );
 		if (nres< 0)
 		{
-			printf(" err = %d", errno);
+			printf("erro = %d\n", errno);
 				err_sys("ошиб­ка вы­зо­ва функ­ции execlp");
 				
 		}
-		n = read(fd[0], line, MAXLINE); 
+		//n = 
+                        read(fd[0], line, MAXLINE); 
 	  
 		//write(STDOUT_FILENO, line, n); 
 	} 
