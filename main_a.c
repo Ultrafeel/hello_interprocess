@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <bits/errno.h>
 #include  <stdint.h>
+#include  <inttypes.h>
 enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
@@ -35,25 +36,52 @@ int main(void) {
     FILE* ppf = popen(//"ls"
             "target_bin/bin/main_b"
             , "w");
-    if (NULL == ppf ) {
+    if (NULL == ppf) {
         err_show("popen error");
         exit(1);
-     }
-    int fp = fileno(ppf);
-    int nbytes = -1;
+    }
+    // int fp = fileno(ppf);
+    int n = 0;
+    int nbytes = 0;
     do {//char buff[BUFF_SIZE] = "";
         //gets( buff);
-        puts(" Insert number");
+         printf(__FILE__" op N: %d\n", n);
+         puts(" Insert number");
         int32_t i = 0;
-        scanf("%+"SCNi32, &i);
+
+        //char *p;
+
+        errno = 0;
+        int scr = scanf("%+"SCNi32, &i);
+        if (scr == 1) {
+           // printf("read: %s\n", p);
+        } else if (errno != 0) {
+            err_show("scanf");
+            continue;
+
+        } else {
+            printf(" scanf err\n");
+            continue;
+        }
+
+
+        printf(" scanf get: %+d item\n", scr);
         //= atoi(buff);
-        printf(" Inserted number: %"PRId32"\n", i);
-        nbytes = write( fp,&i, sizeof(i));
+        printf(" Inserted number: %+"PRId32"\n", i);
+        //fflush();
+        errno = 0;
+        nbytes = fprintf(ppf, "%+"PRId32"\n", i);
+        //nbytes = write( fp,&i, sizeof(i));
+
         if (nbytes == -1)
-            err_show("error pipe write");
-    } while (nbytes != -1);
-    if (pclose(ppf) == -1)
-       err_show("calling pclose");
+            err_show("error pipe fprintf");
+        else
+            printf(" fprintf transmitted: %+d\n", nbytes);
+
+    } while ((nbytes != -1)&&(++n < 5));
+         errno = 0;
+   if (pclose(ppf) == -1)
+        err_show("calling pclose");
     exit(0);
 }
 
