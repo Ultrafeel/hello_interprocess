@@ -35,11 +35,17 @@
           <buildCommandWorkingDir>/home/unencr/Prog_projects/hello_interprocess</buildCommandWorkingDir>
           <buildCommand>${MAKE} -f Makefile</buildCommand>
           <cleanCommand>${MAKE} -f Makefile clean</cleanCommand>
-          <executablePath></executablePath>
+          <executablePath>/home/unencr/Prog_projects/hello_interprocess/target_bin/bin/main_a</executablePath>
           <cTool>
             <incDir>
               <pElem>.</pElem>
+              <pElem>/usr/include</pElem>
             </incDir>
+            <preprocessorList>
+              <Elem>_GNU_SOURCE</Elem>
+              <Elem>__USE_POSIX</Elem>
+              <Elem>__USE_POSIX2</Elem>
+            </preprocessorList>
           </cTool>
         </makeTool>
         <preBuild>
