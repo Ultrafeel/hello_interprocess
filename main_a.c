@@ -29,7 +29,7 @@ int main(void) {
 
     //int fd[2];
     //pid_t pid; 
-    //char line[MAXLINE];
+    char line[MAXLINE];
     //execlp("sh", "-v", "-c" , //"ls",  
     //        "$PWD/target_bin/bin/"         "main_b",
     //        (char*)0);
@@ -52,31 +52,33 @@ int main(void) {
         //char *p;
 
         errno = 0;
-        int scr = scanf("%+"SCNi32, &i);
-        if (scr == 1) {
-           // printf("read: %s\n", p);
+        //int scr = scanf("%+"SCNi32, &i);
+        char *p = fgets(line, MAXLINE, stdin);
+        if (p != 0) {
+           printf("read: %s\n", p);
         } else if (errno != 0) {
-            err_show("scanf");
+            err_show("fgets");
             continue;
 
         } else {
-            printf(" scanf err\n");
+            printf(" fgets err\n");
             continue;
         }
 
 
-        printf(" scanf get: %+d item\n", scr);
-        //= atoi(buff);
-        printf(" Inserted number: %+"PRId32"\n", i);
+        printf(" fgets get: '%s' str\n", p);
+        i = atoi(p);
+        printf(" Inserted number: %"PRId32"\n", i);
         //fflush();
         errno = 0;
-        nbytes = fprintf(ppf, "%+"PRId32"\n", i);
+        nbytes = fprintf(ppf, "%"PRId32"\n", i);
         //nbytes = write( fp,&i, sizeof(i));
-
         if (nbytes == -1)
             err_show("error pipe fprintf");
         else
             printf(" fprintf transmitted: %+d\n", nbytes);
+        fflush(ppf);
+
 
     } while ((nbytes != -1)&&(++n < 5));
          errno = 0;
