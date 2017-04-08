@@ -163,9 +163,42 @@ int main(int argc, char **argv)
 	setvbuf(stdout, NULL, _IONBF, 0);
     int i;
     char line[MAXLINE] = "";
+	
+	  fd_set rfds, rset;
+    struct timeval tv;
+    int retval;
+
+    /* Watch stdin (fd 0) to see when it has input. */
+    FD_ZERO(&rfds);
+    FD_SET(STDIN_FILENO, &rfds);
+
     int n = -1;
+	
 	char * pgs = 0;
 	do {
+		/* Wait up to five seconds. */
+		tv.tv_sec = 5;
+		tv.tv_usec = 0;
+		errno = 0;
+		rset = rfds;
+		retval = select(1, &rset, NULL, NULL, &tv);
+		/* Don’t rely on the value of tv now! */
+
+		if (retval == -1)
+			err_show("select()");
+		else if (retval)
+			if (FD_ISSET(STDIN_FILENO, &rset))
+				printf("Data is available now. %d\n", retval);
+			else {
+				printf("select Data is not available now.\n");
+				continue;
+			}
+
+			/* FD_ISSET(0, &rfds) will be true. */
+		else{
+			printf("No data within five seconds.\n");
+			continue;
+		}
 		// n = read(STDIN_FILENO, &i, sizeof(i));
 		printf(__FILE__" op N: %d\n", n);
 		errno = 0;
@@ -183,8 +216,9 @@ int main(int argc, char **argv)
             //vscanf("%d", &i);
         } else if (errno != 0)
             err_show(" fgets");
-		++n
-    } while (1);//((pgs != 0)&& ( < 5));
+		//else
+		++n;
+    } while (n < 50);//((pgs != 0)&& ());
     //write(STDOUT_FILENO, line, n); 
     //int i = 0;
     //scanf("%d", &i);
