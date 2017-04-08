@@ -211,11 +211,11 @@ int main(int argc, char **argv)
 		// &i, sizeof(i));
 		printf(__FILE__" op N: %d\n", n);
 		errno = 0;
-		pgs = line;
-		*line = '0';
-			//fgets(line, MAXLINE, stdin);
-		int readn = read(STDIN_FILENO, line, MAXLINE-1);
-		if (readn > 0) {
+		
+		//*line = '0';
+		pgs = fgets(line, MAXLINE, stdin);
+		//int readn = read(STDIN_FILENO, line, MAXLINE-1);
+		if (pgs) {
 			printf(" line recieved: '%s'\n", pgs);
 			i = atoi(pgs);
             printf(" num recieved: %d\n", i);
@@ -226,12 +226,9 @@ int main(int argc, char **argv)
             ptrShMem->flag = true;
 			ptrShMem->val = isqr;
             //vscanf("%d", &i);
-        } else if ((readn < 0))//&&(errno != 0))
+        } else if (errno != 0)
             err_show(" read");
-		else
-		{
-			printf(" STDIN eof  zero \n");
-		}
+
 		//else
 		++n;
     } while (n < 22);//((pgs != 0)&& ());
