@@ -155,21 +155,24 @@ int main(int argc, char **argv)
 //вующую, следует в  аргументе flag вместе с  флагом IPC_CREAT указать флаг
 //IPC_EXCL. В результате, если данная структура IPC уже существует, функция
 //вернет признак ошибки с кодом EEXIST.
+		printf("!!exit c !!\n");
         exit(0);
     }   
     atexit(delSHM);
 
-    setbuf(stdin, 0);
-	setvbuf(stdout, NULL, _IONBF, 0);
-    int i;
-    char line[MAXLINE] = "";
-	
-	  fd_set rfds, rset;
-    struct timeval tv;
-    int retval;
+   // setbuf(stdin, 0);
+	setvbuf(stdin, NULL, _IONBF, 0);
 
-    /* Watch stdin (fd 0) to see when it has input. */
-    FD_ZERO(&rfds);
+	setvbuf(stdout, NULL, _IONBF, 0);
+	int i;
+	char line[MAXLINE] = "";
+
+	fd_set rfds, rset;
+	struct timeval tv;
+	int retval;
+
+	/* Watch stdin (fd 0) to see when it has input. */
+	FD_ZERO(&rfds);
     FD_SET(STDIN_FILENO, &rfds);
 
     int n = -1;
@@ -181,15 +184,21 @@ int main(int argc, char **argv)
 		tv.tv_usec = 0;
 		errno = 0;
 		rset = rfds;
-		retval = select(1, &rset, NULL, NULL, &tv);
+
+		retval = select(STDIN_FILENO + 1, &rset, NULL, NULL, &tv);
 		/* Don’t rely on the value of tv now! */
 
 		if (retval == -1)
 			err_show("select()");
-		else if (retval)
+		else if (retval > 0)
 			if (FD_ISSET(STDIN_FILENO, &rset))
 				printf("Data is available now. %d\n", retval);
 			else {
+
+				if (FD_ISSET(STDIN_FILENO, &eset))
+					printf(" eset !!. %d\n", retval);
+
+
 				printf("select Data is not available now.\n");
 				continue;
 			}
@@ -199,11 +208,14 @@ int main(int argc, char **argv)
 			printf("No data within five seconds.\n");
 			continue;
 		}
-		// n = read(STDIN_FILENO, &i, sizeof(i));
+		// &i, sizeof(i));
 		printf(__FILE__" op N: %d\n", n);
 		errno = 0;
-		pgs = fgets(line, MAXLINE, stdin);
-		if (pgs != 0) {
+		pgs = line;
+		*line = '0';
+			//fgets(line, MAXLINE, stdin);
+		int readn = read(STDIN_FILENO, line, MAXLINE-1);
+		if (readn > 0) {
 			printf(" line recieved: '%s'\n", pgs);
 			i = atoi(pgs);
             printf(" num recieved: %d\n", i);
@@ -214,11 +226,17 @@ int main(int argc, char **argv)
             ptrShMem->flag = true;
 			ptrShMem->val = isqr;
             //vscanf("%d", &i);
-        } else if (errno != 0)
-            err_show(" fgets");
+        } else if ((readn < 0))//&&(errno != 0))
+            err_show(" read");
+		else
+		{
+			printf(" STDIN eof  zero \n");
+		}
 		//else
 		++n;
-    } while (n < 50);//((pgs != 0)&& ());
+    } while (n < 22);//((pgs != 0)&& ());
+	printf(" process b exit\n");
+
     //write(STDOUT_FILENO, line, n); 
     //int i = 0;
     //scanf("%d", &i);
