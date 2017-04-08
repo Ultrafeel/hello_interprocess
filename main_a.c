@@ -80,8 +80,9 @@ int main(void) {
         fflush(ppf);
 
 
-    } while ((nbytes != -1)&&(++n < 5));
-         errno = 0;
+    } while ((nbytes != -1));//&&(++n < 5)
+         errno = 0;	
+	printf(" process a exit\n");
    if (pclose(ppf) == -1)
         err_show("calling pclose");
     exit(0);
