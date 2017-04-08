@@ -195,24 +195,18 @@ int main(int argc, char **argv)
 				printf("Data is available now. %d\n", retval);
 			else {
 
-				if (FD_ISSET(STDIN_FILENO, &eset))
-					printf(" eset !!. %d\n", retval);
-
-
 				printf("select Data is not available now.\n");
 				continue;
 			}
 
-			/* FD_ISSET(0, &rfds) will be true. */
 		else{
 			printf("No data within five seconds.\n");
 			continue;
 		}
-		// &i, sizeof(i));
+
 		printf(__FILE__" op N: %d\n", n);
 		errno = 0;
 		
-		//*line = '0';
 		pgs = fgets(line, MAXLINE, stdin);
 		//int readn = read(STDIN_FILENO, line, MAXLINE-1);
 		if (pgs) {
