@@ -26,8 +26,8 @@ main: $(OUT_TARG_DIR)/$(EXECUTABLE) $(OUT_TARG_DIR)/main_b
 $(OUT_TARG_DIR)/$(EXECUTABLE): $(OBJDIR)/main_a.o  | $(OUT_TARG_DIR) 
 	$(CC) $(OBJDIR)/main_a.o  $(LDFLAGS)  -o $(OUT_TARG_DIR)/$(EXECUTABLE)
 	
-$(OUT_TARG_DIR)/main_b: $(OBJDIR)/main_b.o | $(OUT_TARG_DIR) 
-	$(CC) $(OBJDIR)/main_b.o  $(LDFLAGS)  -o $@
+$(OUT_TARG_DIR)/main_b: $(OBJDIR)/main_b.o $(OBJDIR)/vector.o | $(OUT_TARG_DIR) 
+	$(CC) $(OBJDIR)/main_b.o $(OBJDIR)/vector.o  -lpthread $(LDFLAGS)  -o $@
 #:$@
 
 #echo libso!: $(LIBS_OB)

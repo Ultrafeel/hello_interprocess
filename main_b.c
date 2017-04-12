@@ -30,6 +30,8 @@
 #include <inttypes.h>
 #include <errno.h>
 #include <sys/ipc.h>
+#include <pthread.h>
+
 enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
@@ -84,6 +86,7 @@ const bool false = 0;
 
 typedef struct _TShMem {
 	bool flag;
+	pthread_mutex_t f_lock;
 	long unsigned val;
 } TShMem;
 
@@ -208,6 +211,12 @@ int main(int argc, char **argv)
 		errno = 0;
 		pgs = line;
 		*line = '0';
+		int rtryl = pthread_mutex_trylock(&ptrShMem->f_lock);
+		if (rtryl == EBUSY)
+		{
+			printf("sh mem is busy and locked! \n");
+			continue;
+		}
 			//fgets(line, MAXLINE, stdin);
 		int readn = read(STDIN_FILENO, line, MAXLINE-1);
 		if (readn > 0) {
@@ -216,8 +225,10 @@ int main(int argc, char **argv)
             printf(" num recieved: %d\n", i);
             unsigned long int isqr = i*i;
             printf(" num square: %lu\n", isqr);
+
+			//pthread_mutex_lock(&fp->f_lock);
 			if (ptrShMem->flag)
-				printf("sh mem is busy! \n");
+				printf("sh mem is busy! override !\n");
             ptrShMem->flag = true;
 			ptrShMem->val = isqr;
             //vscanf("%d", &i);
