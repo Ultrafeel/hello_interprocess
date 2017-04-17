@@ -165,7 +165,7 @@ int timedLockMut()
 		if (ETIMEDOUT == err)
 			wprintf(L"ETIMEDOUT");
 		printf("\n");
-		
+			
 	}
 	return err;
 }
@@ -204,12 +204,14 @@ int main(int argc, char **argv)
 		puts("proc C started!");
 
 		do {
+			//pthread_mutex_lock(&ptrShMem->f_lock);
 			if (ptrShMem->flag) {
 				printf("value = %ld\n", ptrShMem->val);
 				ptrShMem->flag = false;
 				fflush(stdout);
 			} else
 				sleep(1);
+			//pthread_mutex_unlock(&ptrShMem->f_lock);
 		} while (1);
 		//        key_t ftok(const char *path, int id);
 		//        Если нужно создать новую структуру IPC, а не получить ссылку на сущест
