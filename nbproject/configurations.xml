@@ -4,8 +4,6 @@
     <df root="/home/unencr/Prog_projects/hello_interprocess" name="0">
       <in>main_a.c</in>
       <in>main_b.c</in>
-      <in>vector.c</in>
-      <in>vector.h</in>
     </df>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -68,10 +66,6 @@
             flavor2="10">
         <cTool flags="0">
         </cTool>
-      </item>
-      <item path="vector.c" ex="false" tool="0" flavor2="0">
-      </item>
-      <item path="vector.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

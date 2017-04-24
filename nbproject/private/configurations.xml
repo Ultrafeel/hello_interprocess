@@ -10,8 +10,6 @@
       </df>
       <in>main_a.c</in>
       <in>main_b.c</in>
-      <in>vector.c</in>
-      <in>vector.h</in>
     </df>
   </logicalFolder>
   <projectmakefile>/home/unencr/Prog_projects/hello_interprocess/Makefile</projectmakefile>
