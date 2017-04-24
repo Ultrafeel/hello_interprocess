@@ -34,13 +34,9 @@ $(OUT_TARG_DIR)/main_b: $(OBJDIR)/main_b.o $(OBJDIR)/vector.o | $(OUT_TARG_DIR)
 
 # -Wl,-trace-symbol=bye  
 
-$(OBJDIR)/vector.o:vector.c vector.h| $(OBJDIR)
-	$(CC) -I. $(CFLAGS) -c -o $@ $<
-
-
 # %.h $(LIBS_OB) $(LIBSRCH)
 #$(OBJS):$(EXECUTABLE).c | $(OBJDIR)
-$(OBJDIR)/%.o:%.c vector.h| $(OBJDIR)
+$(OBJDIR)/%.o:%.c | $(OBJDIR)
 	$(CC) -I. $(CFLAGS) -c -o $@ $<
 
 #	gcc -D_GNU_SOURCE -D__USE_POSIX2 -D__USE_POSIX -I/usr/include -Wall -std=c11  -E -C  $< > $<.ip
