@@ -69,15 +69,9 @@
         <cTool flags="0">
         </cTool>
       </item>
-      <item path="/home/unencr/Prog_projects/hello_interprocess/vector.c"
-            ex="false"
-            tool="0"
-            flavor2="0">
+      <item path="vector.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="/home/unencr/Prog_projects/hello_interprocess/vector.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
+      <item path="vector.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>
