@@ -109,7 +109,8 @@ void delSHM()
 	if (0 != shmid) {
 		
 		sem_destroy(&ptrShMem->buff_is_free_sem);
-		
+		sem_destroy(&ptrShMem->buff_is_full_sem);
+
 		if (shmctl(shmid, IPC_RMID, 0) < 0)
 			err_sys("ошибка вызова функции shmctl");
 		else
@@ -136,8 +137,8 @@ int initSharedMem(void)
 	if (sem_init(&ptrShMem->buff_is_free_sem, 1, 1) == -1)
     { printf("sem_init: failed: %s\n", strerror(errno)); }
 	
-//	if (sem_init(buff_is_full_sem, 1, 0) == -1)
-  //  { printf("sem_init: failed: %s\n", strerror(errno)); }
+	if (sem_init(&ptrShMem->buff_is_full_sem, 1, 0) == -1)
+    { printf("sem_init: failed: %s\n", strerror(errno)); }
 	
 	ptrShMem->flag = false;
 	//
@@ -191,7 +192,9 @@ int writeToShared(int isqr)
 
 	ptrShMem->flag = true;
 	ptrShMem->val = isqr;
-
+	
+	sem_post(&ptrShMem->buff_is_full_sem);
+	
 	return 0;
 }
 
@@ -216,10 +219,11 @@ int main(int argc, char **argv)
 
 		do {
 			
-			
+			timedWaitSem(&ptrShMem->buff_is_full_sem);
 			if (ptrShMem->flag) {
 				printf("value = %ld\n", ptrShMem->val);
 				ptrShMem->flag = false;
+				sem_post(&ptrShMem->buff_is_free_sem);
 				fflush(stdout);
 			} else
 				sleep(1);
