@@ -89,7 +89,6 @@ const bool false = 0;
 
 typedef struct _TShMem {
 	bool flag;
-	pthread_mutex_t f_lock;
 	long unsigned val;
 } TShMem;
 
@@ -103,9 +102,8 @@ TShMem * ptrShMem = 0;
 void delSHM()
 {
 	if (0 != shmid) {
-	
-		pthread_mutex_destroy(&ptrShMem->f_lock);
 
+		
 		if (shmctl(shmid, IPC_RMID, 0) < 0)
 			err_sys("ошибка вызова функции shmctl");
 		else
@@ -129,49 +127,14 @@ int mainSH2(void)
 	ptrShMem->flag = false;
 	//PTHREAD_MUTEX_INITIALIZER
 
-	if (pthread_mutex_init(&ptrShMem->f_lock, NULL) != 0) {
-		err_sys("ошибка вызова функции pthread_mutex_init");
-		return(1);
-	}
 
 	return(0);
 }
 
 
-//		int rtryl = pthread_mutex_trylock(&ptrShMem->f_lock);
-//		if (rtryl == EBUSY)
-int timedLockMut()
-{
-	int err;
-	struct timespec tout;
-	struct tm *tmp;
-	clock_gettime(CLOCK_REALTIME, &tout);
-	tmp = localtime(&tout.tv_sec);
-	char buf[64];
-	strftime(buf, sizeof(buf), "%r", tmp);
-	wprintf(L"те­ку­щее вре­мя: %s\n", buf);
-	tout.tv_sec += 5; /* 10 се­кунд, на­чи­ная от те­ку­ще­го вре­ме­ни */
-	/* вни­ма­ние: это мо­жет при­вес­ти к ту­пи­ко­вой си­туа­ции */
-	err = pthread_mutex_timedlock(&ptrShMem->f_lock, &tout);
-	clock_gettime(CLOCK_REALTIME, &tout);
-	tmp = localtime(&tout.tv_sec);
-	strftime(buf, sizeof(buf), "%r", tmp);
-	wprintf(L"те­ку­щее вре­мя: %s\n", buf);
-	if (err == 0)
-		wprintf(L"мьютекс заперт!\n");
-	else
-	{
-		wprintf(L"не по­лу­чи­лось по­втор­но за­пе­реть мью­текс: %d\n", err);
-		if (ETIMEDOUT == err)
-			wprintf(L"ETIMEDOUT");
-		printf("\n");
-			
-	}
-	return err;
-}
 int writeToShared(int isqr)
 {
-	int retc = timedLockMut();
+	int retc = ;
 	if (0 != retc)
 		return retc;
 		//pthread_mutex_lock(&fp->f_lock);
@@ -182,7 +145,7 @@ int writeToShared(int isqr)
 
 	ptrShMem->flag = true;
 	ptrShMem->val = isqr;
-	pthread_mutex_unlock(&ptrShMem->f_lock);
+
 	return 0;
 }
 
@@ -204,14 +167,16 @@ int main(int argc, char **argv)
 		puts("proc C started!");
 
 		do {
-			//pthread_mutex_lock(&ptrShMem->f_lock);
+			
+			
 			if (ptrShMem->flag) {
 				printf("value = %ld\n", ptrShMem->val);
 				ptrShMem->flag = false;
 				fflush(stdout);
 			} else
 				sleep(1);
-			//pthread_mutex_unlock(&ptrShMem->f_lock);
+			
+			
 		} while (1);
 		//        key_t ftok(const char *path, int id);
 		//        Если нужно создать новую структуру IPC, а не получить ссылку на сущест
