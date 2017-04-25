@@ -51,12 +51,13 @@ void err_sys(char const* str)
 
 void err_show(char const* str)
 {
-	printf("error: %s . erro = %d\n", str, errno);
+	printf("error: %s . erro = %d, err description: %s\n", str, errno, strerror(errno));
 }
 
 void err_showE(char const* str)
 {
-	printf("error: %s . erro = %d\n", str, errno);
+	err_show(str);
+	printf("process will exit due to error.");
 	exit(1);
 }
 char array[ARRAY_SIZE]; /* неинициализированные данные = bss */
