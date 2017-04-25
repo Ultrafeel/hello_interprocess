@@ -41,10 +41,7 @@ enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
 };
-#define ARRAY_SIZE  40000   
-#define MALLOC_SIZE 100000  
-#define SHM_SIZE    100000
-#define SHM_MODE    0600 /* чтение и запись для владельца */
+
 
 void err_sys(char const* str)
 {
@@ -62,30 +59,8 @@ void err_showE(char const* str)
 	printf("process will exit due to error.");
 	exit(1);
 }
-char array[ARRAY_SIZE]; /* неинициализированные данные = bss */
 
-int mainSH(void)
-{
-	int shmid;
-	char *ptr, *shmptr;
-	printf("array[] от %p до %p\n", (void *) &array[0], (void*) &array[ARRAY_SIZE]);
-	//	678
-	//	Глава 15. Межпроцессное взаимодействие
-	printf("стек примерно %p\n", (void *) &shmid);
-	if ((ptr = malloc(MALLOC_SIZE)) == NULL)
-		err_sys("ошибка вызова функции malloc");
-	printf("динамически выделенная область от %p до %p\n",
-		(void *) ptr, (void *) ptr + MALLOC_SIZE);
-	if ((shmid = shmget(IPC_PRIVATE, SHM_SIZE, SHM_MODE)) < 0)
-		err_sys("ошибка вызова функции shmget");
-	if ((shmptr = shmat(shmid, 0, 0)) == (void *) - 1)
-		err_sys("ошибка вызова функции shmat");
-	printf("сегмент разделяемой памяти присоединен в адресах от %p до %p\n",
-		(void *) shmptr, (void *) shmptr + SHM_SIZE);
-	if (shmctl(shmid, IPC_RMID, 0) < 0)
-		err_sys("ошибка вызова функции shmctl");
-	return(0);
-}
+
 typedef unsigned char bool;
 bool const true = 1;
 const bool false = 0;
