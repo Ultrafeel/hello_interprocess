@@ -26,20 +26,21 @@
 #include <stdlib.h>
 
 #include <unistd.h>
-#include  <stdint.h>
+#include <stdint.h>
 #include <inttypes.h>
 #include <errno.h>
 #include <sys/ipc.h>
 #include <pthread.h>
 #include <wchar.h>
 
+
+#include <sys/shm.h>
+#include <semaphore.h>
+#include <string.h>
 enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
 };
-
-#include <sys/shm.h>
-#include <semaphore.h>
 #define ARRAY_SIZE  40000   
 #define MALLOC_SIZE 100000  
 #define SHM_SIZE    100000
