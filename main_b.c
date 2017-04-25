@@ -39,6 +39,7 @@ enum {
 };
 
 #include <sys/shm.h>
+#include <semaphore.h>
 #define ARRAY_SIZE  40000   
 #define MALLOC_SIZE 100000  
 #define SHM_SIZE    100000
@@ -90,6 +91,9 @@ const bool false = 0;
 
 typedef struct _TShMem {
 	bool flag;
+	sem_t buff_is_free_sem;
+	sem_t buff_is_full_sem;
+
 	long unsigned val;
 } TShMem;
 
@@ -103,7 +107,8 @@ TShMem * ptrShMem = 0;
 void delSHM()
 {
 	if (0 != shmid) {
-
+		
+		sem_destroy(&ptrShMem->buff_is_free_sem);
 		
 		if (shmctl(shmid, IPC_RMID, 0) < 0)
 			err_sys("ошибка вызова функции shmctl");
@@ -112,7 +117,7 @@ void delSHM()
 	}
 }
 
-int mainSH2(void)
+int initSharedMem(void)
 {
 
 
@@ -125,20 +130,60 @@ int mainSH2(void)
 	printf("сегмент разделяемой памяти присоединен в адресах от %p до %p\n",
 		(void *) ptrShMem, (void *) ptrShMem + MALLOC_SIZE2);
 	//	EACCES		13	/* Permission denied */
+
+	errno = 0;
+	// Mac OS X does not actually implement sem_init()
+	if (sem_init(&ptrShMem->buff_is_free_sem, 1, 1) == -1)
+    { printf("sem_init: failed: %s\n", strerror(errno)); }
+	
+//	if (sem_init(buff_is_full_sem, 1, 0) == -1)
+  //  { printf("sem_init: failed: %s\n", strerror(errno)); }
+	
 	ptrShMem->flag = false;
-	//PTHREAD_MUTEX_INITIALIZER
+	//
 
 
 	return(0);
 }
+//----------------
 
 
+int timedWaitSem(sem_t * sem)
+{
+	int err = -1;
+	struct timespec tout;
+	struct tm *tmp;
+	clock_gettime(CLOCK_REALTIME, &tout);
+	tmp = localtime(&tout.tv_sec);
+	char buf[64];
+	strftime(buf, sizeof(buf), "%r", tmp);
+	wprintf(L"те­ку­щее вре­мя: %s\n", buf);
+	tout.tv_sec += 5; /* 10 се­кунд, на­чи­ная от те­ку­ще­го вре­ме­ни */
+
+	err = sem_timedwait(sem, &tout);
+	clock_gettime(CLOCK_REALTIME, &tout);
+	tmp = localtime(&tout.tv_sec);
+	strftime(buf, sizeof(buf), "%r", tmp);
+	wprintf(L"те­ку­щее вре­мя: %s\n", buf);
+	if (err == 0)
+		wprintf(L"sem заперт!\n");
+	else
+	{
+		wprintf(L"не по­лу­чи­лось по­втор­но за­пе­реть sem: %d\n", err);
+		if (ETIMEDOUT == err)
+			wprintf(L"ETIMEDOUT");
+		printf("\n");
+			
+	}
+	return err;
+}
+//-------
 int writeToShared(int isqr)
 {
-	int retc = ;
+	int retc = timedWaitSem(&ptrShMem->buff_is_free_sem);
 	if (0 != retc)
 		return retc;
-		//pthread_mutex_lock(&fp->f_lock);
+
 	if (ptrShMem->flag)
 		printf("sh mem is busy! override !\n");
 	
@@ -158,8 +203,10 @@ int main(int argc, char **argv)
 		printf(" Hello, arg = %s\n", argv[0]);
 
 	}
-	mainSH2();
+	initSharedMem();
+	atexit(delSHM);
 	pid_t pid = 0;
+
 	if ((pid = fork()) < 0) {
 		err_show("fork");
 		return(1);
@@ -187,7 +234,6 @@ int main(int argc, char **argv)
 		printf("!!exit c !!\n");
 		exit(0);
 	}
-	atexit(delSHM);
 
 	// setbuf(stdin, 0);
 	setvbuf(stdin, NULL, _IONBF, 0);
