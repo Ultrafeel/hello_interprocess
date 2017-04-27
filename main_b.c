@@ -63,7 +63,10 @@ void err_showE(char const* str)
 
 typedef unsigned char bool;
 bool const true = 1;
-const bool false = 0;
+
+enum {
+	false = 0
+};
 
 typedef struct _TShMem {
 	bool flag;
@@ -174,6 +177,56 @@ int writeToShared(int isqr)
 	return 0;
 }
 
+typedef  bool atomic_bool;
+atomic_bool  c_recive_value = false;
+int gSqureCRecieved = -1;
+
+void CheckAndPrint()
+{
+	if (c_recive_value) {
+		printf(" c:value = %d\n", gSqureCRecieved);
+	}
+}
+void * c2_thr_fn(void *arg)
+{
+    printf(" c:  thread 2 ");
+	struct timespec ts;
+	ts.tv_sec = 1;
+	ts.tv_nsec = 0;
+	struct timespec tsret;
+	do 
+	{
+		printf(" c:I am alive\n");
+		int sret = nanosleep(&ts, &tsret);
+		if (EINTR != sret) {
+			CheckAndPrint();
+		} else {
+			struct timespec tsret2;
+			do {
+				CheckAndPrint();
+				sret = nanosleep(&tsret, &tsret2);
+				if (EINTR == sret) {
+					tsret = tsret;
+				} else
+					break;
+			} while (1);
+		}
+
+	} while (1);
+    return((void *)0);
+}
+
+int createTc2(void)
+{
+	int err = 0;
+	pthread_t ntid;
+	err = pthread_create(&ntid, NULL, c2_thr_fn, NULL);
+	if (err != 0) {
+		printf(" c:can't create thread %d", err);
+		exit(1);
+	}
+	return err;
+}
 int main(int argc, char **argv)
 {
 	puts(__FILE__" Hello");
@@ -193,6 +246,8 @@ int main(int argc, char **argv)
 	} else if (pid == 0) { /* дочерний процесс */
 		puts("proc C started!");
 
+		
+		
 		do {
 
 			int ret = sem_wait(&ptrShMem->buff_is_full_sem);
@@ -201,7 +256,8 @@ int main(int argc, char **argv)
 			}
 			 
 			if (ptrShMem->flag) {
-				printf(" c:value = %ld\n", ptrShMem->val);
+				//printf(" c:value = %ld\n", ptrShMem->val);
+				
 				ptrShMem->flag = false;
 				sleep(5);
 				sem_post(&ptrShMem->buff_is_free_sem);
