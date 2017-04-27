@@ -197,12 +197,13 @@ int main(int argc, char **argv)
 			
 			timedWaitSem(&ptrShMem->buff_is_full_sem);
 			if (ptrShMem->flag) {
-				printf("value = %ld\n", ptrShMem->val);
+				printf(" c:value = %ld\n", ptrShMem->val);
 				ptrShMem->flag = false;
 				sem_post(&ptrShMem->buff_is_free_sem);
+				
 				fflush(stdout);
 			} else
-				sleep(1);
+				printf(" c: flag false??");
 			
 			
 		} while (1);
@@ -266,7 +267,7 @@ int main(int argc, char **argv)
 			*line = '0';
 
 		if (haveResultNumToWrite == 1) {
-			printf(" write pending num square: %lu\n", isqr);
+			printf(" b:!!write pending num square: %lu\n", isqr);
 
 			if (0 != writeToShared(isqr)) {
 				haveResultNumToWrite = 0;
@@ -278,13 +279,13 @@ int main(int argc, char **argv)
 		//fgets(line, MAXLINE, stdin);
 		int readn = read(STDIN_FILENO, line, MAXLINE - 1);
 		if (readn > 0) {
-			printf(" line recieved: '%s'\n", pgs);
+			//printf(" b:line recieved: '%s'\n", pgs);
 			i = atoi(pgs);
-			printf(" num recieved: %d\n", i);
+			printf(" b:num recieved: %d\n", i);
 			isqr = i*i;
 			haveResultNumToWrite = 1;
 			
-			printf(" num square: %lu\n", isqr);
+			printf(" b:num square: %lu\n", isqr);
 
 			if (0 != writeToShared(isqr))
 				continue;
@@ -298,7 +299,7 @@ int main(int argc, char **argv)
 		}
 		//else
 		++n;
-	} while (n < 22); //((pgs != 0)&& ());
+	} while (1); //n < 22((pgs != 0)&& ());
 	printf(" process b exit\n");
 
 	//write(STDOUT_FILENO, line, n); 
