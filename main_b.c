@@ -194,11 +194,16 @@ int main(int argc, char **argv)
 		puts("proc C started!");
 
 		do {
-			
-			timedWaitSem(&ptrShMem->buff_is_full_sem);
+
+			int ret = sem_wait(&ptrShMem->buff_is_full_sem);
+			if (ret == -1) {
+				err_showE("c:sem_wait");
+			}
+			 
 			if (ptrShMem->flag) {
 				printf(" c:value = %ld\n", ptrShMem->val);
 				ptrShMem->flag = false;
+				sleep(5);
 				sem_post(&ptrShMem->buff_is_free_sem);
 				
 				fflush(stdout);
@@ -251,18 +256,18 @@ int main(int argc, char **argv)
 			err_show("select()");
 		else if (retval > 0)
 			if (FD_ISSET(STDIN_FILENO, &rset))
-				printf("Data is available now. %d\n", retval);
+				printf(" b:Data is available now. %d\n", retval);
 			else {
 
-				printf("select Data is not available now.\n");
+				printf(" b:select Data is not available now.\n");
 				continue;
 			}
 		else {
-			printf("No data within %d seconds.\n", timeInSec);
+			printf(" b%d", timeInSec);//No data within %d seconds.\n
 			continue;
 		}
 
-		printf(__FILE__" op N: %d\n", n);
+		printf("  b:op N: %d\n", n);
 		pgs = line;
 			*line = '0';
 
@@ -279,20 +284,25 @@ int main(int argc, char **argv)
 		//fgets(line, MAXLINE, stdin);
 		int readn = read(STDIN_FILENO, line, MAXLINE - 1);
 		if (readn > 0) {
-			//printf(" b:line recieved: '%s'\n", pgs);
-			i = atoi(pgs);
-			printf(" b:num recieved: %d\n", i);
-			isqr = i*i;
-			haveResultNumToWrite = 1;
-			
-			printf(" b:num square: %lu\n", isqr);
+			printf(" b:line recieved: '%s'\n", pgs);
+			do {
+				if (haveResultNumToWrite)
+					printf(" b: transmitting number skipped : %lu. Reason: c was busy\n", isqr);
+				i = atoi(pgs);
+				printf(" b:num recieved: %d\n", i);
+				isqr = i*i;
 
-			if (0 != writeToShared(isqr))
-				continue;
-			
-			haveResultNumToWrite = 0;
-			//vscanf("%d", &i);
-		} else if ((readn < 0))//&&(errno != 0))
+				haveResultNumToWrite = 1;
+
+				printf(" b:num square: %lu\n", isqr);
+
+				if (0 != writeToShared(isqr))
+					continue;
+
+				haveResultNumToWrite = 0;
+			} while ((pgs = strchr(pgs, '\n')) && (++pgs, (pgs < (line + readn))));
+				//vscanf("%d", &i);
+		} else if (readn < 0)//&&(errno != 0))
 			err_show(" read");
 		else {
 			printf(" STDIN eof  zero \n");
