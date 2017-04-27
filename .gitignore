@@ -32,3 +32,6 @@
 *.dSYM/
 *.su
 target_bin/bin/*
+nbproject/private/Default.properties
+nbproject/private/private.xml
+nbproject/configurations.xml
