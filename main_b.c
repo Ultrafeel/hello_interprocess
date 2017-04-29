@@ -290,12 +290,12 @@ int main(int argc, char **argv)
 				c_recive_value = true;
 				gSqureCRecieved	= ptrShMem->val;
 				//raise();pthread_self()
-				pthread_kill( c2_tid, signumForC2Notification);
 				ptrShMem->flag = false;
 				
 				//sleep(5);
 				
 				sem_post(&ptrShMem->buff_is_free_sem);
+				pthread_kill( c2_tid, signumForC2Notification);
 				
 				fflush(stdout);
 			} else
