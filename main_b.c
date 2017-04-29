@@ -64,14 +64,13 @@ void err_showE(char const* str)
 
 
 typedef unsigned char bool;
-bool const true = 1;
-
 enum {
-	false = 0
+	false = 0,
+	true = 1
 };
 
 typedef struct _TShMem {
-	bool flag;
+	volatile sig_atomic_t flag;
 	sem_t buff_is_free_sem;
 	sem_t buff_is_full_sem;
 
@@ -81,8 +80,8 @@ typedef struct _TShMem {
 enum {
 	MALLOC_SIZE2 = sizeof(TShMem)
 };
-int shmid = 0;
-TShMem * ptrShMem = 0;
+volatile int shmid = 0;
+TShMem  * ptrShMem = 0;
 //char *;ptrShMem
 
 void delSHM()
@@ -179,9 +178,8 @@ int writeToShared(int isqr)
 	return 0;
 }
 
-typedef  bool atomic_bool;
-atomic_bool  c_recive_value = false;
-int gSqureCRecieved = -1;
+volatile sig_atomic_t  c_recive_value = false;
+volatile int gSqureCRecieved = -1;
 pthread_t c2_tid;
 
 void CheckAndPrint()
@@ -257,6 +255,18 @@ int createTc2(void)
 	}
 	return err;
 }
+
+pid_t c_pid = 0;
+
+volatile sig_atomic_t terminate_flag = 0;
+void terminator_sig_hndlr(int sn)
+{
+	printf(" b:terminator_sig_hndlr");
+	terminate_flag = 1;
+	kill(c_pid, SIGTERM);
+}
+
+
 int main(int argc, char **argv)
 {
 	puts(__FILE__" Hello");
@@ -266,20 +276,19 @@ int main(int argc, char **argv)
 
 	}
 	initSharedMem();
-	atexit(delSHM);
+	//atexit(delSHM);
 	pid_t const bpid = getpid();
-	pid_t pid = 0;
 
-	if ((pid = fork()) < 0) {
+	if ((c_pid = fork()) < 0) {
 		err_show("fork");
 		return(1);
 		/* значение errno будет установлено функцией fork() */
-	} else if (pid == 0) { /* дочерний процесс */
+	} else if (c_pid == 0) { /* дочерний процесс */
 		puts("proc C started!");
 
 		createTc2();
 
-
+		//atexit(c_atexit);
 		struct sigaction sa;
 		memset(&sa, 0, sizeof(sa));
 		sigemptyset(&sa.sa_mask);
@@ -323,6 +332,17 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+	sigemptyset(&sa.sa_mask);
+	
+	sa.sa_handler = &terminator_sig_hndlr;
+	sigaction(SIGUSR1, &sa, NULL);
+	sa.sa_handler = &terminator_sig_hndlr;
+	sigaction(SIGTERM, &sa, NULL);
+	sa.sa_handler = &terminator_sig_hndlr;
+	sigaction(SIGINT, &sa, NULL);
+
 	// setbuf(stdin, 0);
 	setvbuf(stdin, NULL, _IONBF, 0);
 
@@ -342,8 +362,12 @@ int main(int argc, char **argv)
 
 	char * pgs = 0;
 	bool haveResultNumToWrite = 0;
+	
+	//atexit  уже не нужен, т.к. проверяеься terminate_flag.
+	//atexit(0);
+	
 	unsigned long int isqr = -1;
-	do {
+	while (!terminate_flag) {
 		/* Wait up to five seconds. */
 		int const timeInSec = (haveResultNumToWrite ? 1: 5);
 		tv.tv_sec = timeInSec;
@@ -354,9 +378,10 @@ int main(int argc, char **argv)
 		retval = select(STDIN_FILENO + 1, &rset, NULL, NULL, &tv);
 		/* Don’t rely on the value of tv now! */
 
-		if (retval == -1)
+		if (retval == -1) {
 			err_show("select()");
-		else if (retval > 0)
+			continue;
+		} else if (retval > 0)
 			if (FD_ISSET(STDIN_FILENO, &rset))
 				printf(" b:Data is available now. %d\n", retval);
 			else {
@@ -411,9 +436,9 @@ int main(int argc, char **argv)
 		}
 		//else
 		++n;
-	} while (1); //n < 22((pgs != 0)&& ());
+	}; //n < 22((pgs != 0)&& ());
 	printf(" process b exit\n");
-
+	delSHM();
 	//write(STDOUT_FILENO, line, n); 
 	//int i = 0;
 	//scanf("%d", &i);

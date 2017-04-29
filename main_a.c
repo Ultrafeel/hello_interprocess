@@ -81,10 +81,13 @@ int main(void) {
 
 
     } while ((nbytes != -1));//&&(++n < 5)
-         errno = 0;	
-	printf(" process a exit\n");
-   if (pclose(ppf) == -1)
-        err_show("calling pclose");
+  	printf(" process a exit\n");
+
+	if (pclose(ppf) == -1)
+	{
+		err_show("calling pclose");
+		return -1;
+	}
     exit(0);
 }
 
