@@ -266,6 +266,7 @@ int main(int argc, char **argv)
 	}
 	initSharedMem();
 	atexit(delSHM);
+	pid_t const bpid = getpid();
 	pid_t pid = 0;
 
 	if ((pid = fork()) < 0) {
@@ -282,7 +283,7 @@ int main(int argc, char **argv)
 			errno = 0;
 			int ret = sem_wait(&ptrShMem->buff_is_full_sem);
 			if (ret == -1) {
-				err_showE("c:sem_wait");
+				err_showE(" c:sem_wait");
 			}
 			 
 			if (ptrShMem->flag) {
@@ -295,8 +296,10 @@ int main(int argc, char **argv)
 				//sleep(5);
 				
 				sem_post(&ptrShMem->buff_is_free_sem);
+
 				pthread_kill( c2_tid, signumForC2Notification);
-				
+				if (MAGIC_NUMBER == gSqureCRecieved)
+					kill(bpid, SIGUSR1);	//getppid()
 				fflush(stdout);
 			} else
 				printf(" c: flag false??");
