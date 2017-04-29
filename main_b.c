@@ -214,6 +214,7 @@ void sig_recieve_mem_handle(int a)
 
 	CheckAndPrint();
 }
+
 void * c2_thr_fn(void *arg)
 {
 
@@ -277,8 +278,15 @@ int main(int argc, char **argv)
 		puts("proc C started!");
 
 		createTc2();
-		if (signal(signumForC2Notification, sig_recieve_mem_handle) == SIG_ERR)
+
+
+		struct sigaction sa;
+		memset(&sa, 0, sizeof(sa));
+		sigemptyset(&sa.sa_mask);
+		sa.sa_handler = &sig_recieve_mem_handle;
+		if (sigaction(signumForC2Notification, &sa, NULL) < 0)
 			err_showE("ошибка вызова функции signal(SIGALRM)");
+		
 		do {
 			errno = 0;
 			int ret = sem_wait(&ptrShMem->buff_is_full_sem);
