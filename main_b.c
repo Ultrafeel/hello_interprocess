@@ -197,6 +197,15 @@ void CheckAndPrint()
 	}
 	//__FUNCTION__ __func__ __PRETTY_FUNCTION__
 }
+
+enum
+{
+	signumForC2Notification = SIGUSR2
+};
+enum
+{
+	MAGIC_NUMBER = 100
+};
 void sig_recieve_mem_handle(int a)
 {	
 	printf(" c: sig_recieve_mem_handle thread id = %d - is created tread = %s\n",
@@ -267,7 +276,7 @@ int main(int argc, char **argv)
 		puts("proc C started!");
 
 		createTc2();
-		if (signal(SIGUSR1, sig_recieve_mem_handle) == SIG_ERR)
+		if (signal(signumForC2Notification, sig_recieve_mem_handle) == SIG_ERR)
 			err_showE("ошибка вызова функции signal(SIGALRM)");
 		do {
 			errno = 0;
@@ -281,7 +290,7 @@ int main(int argc, char **argv)
 				c_recive_value = true;
 				gSqureCRecieved	= ptrShMem->val;
 				//raise();pthread_self()
-				pthread_kill( c2_tid, SIGUSR1);
+				pthread_kill( c2_tid, signumForC2Notification);
 				ptrShMem->flag = false;
 				
 				//sleep(5);
