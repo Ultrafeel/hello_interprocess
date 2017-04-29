@@ -37,6 +37,8 @@
 #include <sys/shm.h>
 #include <semaphore.h>
 #include <string.h>
+#include <signal.h>
+//#include <signum.h>
 enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
@@ -180,23 +182,42 @@ int writeToShared(int isqr)
 typedef  bool atomic_bool;
 atomic_bool  c_recive_value = false;
 int gSqureCRecieved = -1;
+pthread_t c2_tid;
 
 void CheckAndPrint()
 {
-	if (c_recive_value) {
+	
+		if (c_recive_value) {
 		printf(" c:value = %d\n", gSqureCRecieved);
 	}
+	else
+	{
+		printf(" c:strange call to ") ; printf(__func__);
+		 printf(" function\n");
+	}
+	//__FUNCTION__ __func__ __PRETTY_FUNCTION__
+}
+void sig_recieve_mem_handle(int a)
+{	
+	printf(" c: sig_recieve_mem_handle thread id = %d - is created tread = %s\n",
+		(int)pthread_self(),
+		( pthread_equal(pthread_self(), c2_tid)?"true":"false"));	
+
+	CheckAndPrint();
 }
 void * c2_thr_fn(void *arg)
 {
+
     printf(" c:  thread 2 ");
-	struct timespec ts;
+	/*struct timespec ts;
 	ts.tv_sec = 1;
 	ts.tv_nsec = 0;
-	struct timespec tsret;
+	struct timespec tsret;*/
 	do 
 	{
 		printf(" c:I am alive\n");
+		sleep(5);
+		/*
 		int sret = nanosleep(&ts, &tsret);
 		if (EINTR != sret) {
 			CheckAndPrint();
@@ -210,7 +231,7 @@ void * c2_thr_fn(void *arg)
 				} else
 					break;
 			} while (1);
-		}
+		}*/
 
 	} while (1);
     return((void *)0);
@@ -219,8 +240,7 @@ void * c2_thr_fn(void *arg)
 int createTc2(void)
 {
 	int err = 0;
-	pthread_t ntid;
-	err = pthread_create(&ntid, NULL, c2_thr_fn, NULL);
+	err = pthread_create(&c2_tid, NULL, c2_thr_fn, NULL);
 	if (err != 0) {
 		printf(" c:can't create thread %d", err);
 		exit(1);
@@ -246,10 +266,11 @@ int main(int argc, char **argv)
 	} else if (pid == 0) { /* дочерний процесс */
 		puts("proc C started!");
 
-		
-		
+		createTc2();
+		if (signal(SIGUSR1, sig_recieve_mem_handle) == SIG_ERR)
+			err_showE("ошибка вызова функции signal(SIGALRM)");
 		do {
-
+			errno = 0;
 			int ret = sem_wait(&ptrShMem->buff_is_full_sem);
 			if (ret == -1) {
 				err_showE("c:sem_wait");
@@ -257,9 +278,14 @@ int main(int argc, char **argv)
 			 
 			if (ptrShMem->flag) {
 				//printf(" c:value = %ld\n", ptrShMem->val);
-				
+				c_recive_value = true;
+				gSqureCRecieved	= ptrShMem->val;
+				//raise();pthread_self()
+				pthread_kill( c2_tid, SIGUSR1);
 				ptrShMem->flag = false;
-				sleep(5);
+				
+				//sleep(5);
+				
 				sem_post(&ptrShMem->buff_is_free_sem);
 				
 				fflush(stdout);
@@ -319,7 +345,7 @@ int main(int argc, char **argv)
 				continue;
 			}
 		else {
-			printf(" b%d", timeInSec);//No data within %d seconds.\n
+			//printf(" b%d", timeInSec);//No data within %d seconds.\n
 			continue;
 		}
 
