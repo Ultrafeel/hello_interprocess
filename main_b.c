@@ -311,7 +311,10 @@ void procC(const pid_t bpid) {
 		
 	} ;
 
-	printf("!!exit c !!\n");
+	printf(" exit c start!!\n");
+	//wait second thread;
+	pthread_join(c2_tid, NULL);
+	printf(" exit c!!\n");
 	exit(0);
 }
 
