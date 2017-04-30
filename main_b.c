@@ -55,7 +55,6 @@ void err_show(char const* str)
 {
 	printf("error: %s . erro = %d, err description: %s\n", str, errno, strerror(errno));
 }
-
 void delSHM();
 void err_showE(char const* str)
 {
@@ -270,6 +269,55 @@ void terminator_sig_hndlr(int sn)
 }
 
 pid_t pid_a;
+void procC(const pid_t bpid) {
+	puts("proc C started!");
+	
+	createTc2();
+	
+	//atexit(c_atexit);
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+	sigemptyset(&sa.sa_mask);
+	sa.sa_handler = &sig_recieve_mem_handle;
+	if (sigaction(signumForC2Notification, &sa, NULL) < 0)
+		err_showE("ошибка вызова функции signal(SIGALRM)");
+	
+	do {
+		errno = 0;
+		int ret = sem_wait(&ptrShMem->buff_is_full_sem);
+		if (ret == -1) {
+			err_showE(" c:sem_wait");
+		}
+		
+		if (ptrShMem->flag) {
+			//printf(" c:value = %ld\n", ptrShMem->val);
+			c_recive_value = true;
+			gSqureCRecieved	= ptrShMem->val;
+			//raise();pthread_self()
+			ptrShMem->flag = false;
+			
+			//sleep(5);
+			
+			sem_post(&ptrShMem->buff_is_free_sem);
+			
+			pthread_kill( c2_tid, signumForC2Notification);
+			if (MAGIC_NUMBER == gSqureCRecieved)
+				kill(bpid, SIGUSR1);	//getppid()
+			fflush(stdout);
+		} else
+			printf(" c: flag false??");
+		
+		
+	} while (1);
+	//        key_t ftok(const char *path, int id);
+	//        Если нужно создать новую структуру IPC, а не получить ссылку на сущест
+	//вующую, следует в  аргументе flag вместе с  флагом IPC_CREAT указать флаг
+	//IPC_EXCL. В результате, если данная структура IPC уже существует, функция
+	//вернет признак ошибки с кодом EEXIST.
+	printf("!!exit c !!\n");
+	exit(0);
+}
+
 int main(int argc, char **argv)
 {
 	puts(__FILE__" Hello");
@@ -302,51 +350,7 @@ int main(int argc, char **argv)
 		return(1);
 		/* значение errno будет установлено функцией fork() */
 	} else if (c_pid == 0) { /* дочерний процесс */
-		puts("proc C started!");
-
-		createTc2();
-
-		//atexit(c_atexit);
-		struct sigaction sa;
-		memset(&sa, 0, sizeof(sa));
-		sigemptyset(&sa.sa_mask);
-		sa.sa_handler = &sig_recieve_mem_handle;
-		if (sigaction(signumForC2Notification, &sa, NULL) < 0)
-			err_showE("ошибка вызова функции signal(SIGALRM)");
-		
-		do {
-			errno = 0;
-			int ret = sem_wait(&ptrShMem->buff_is_full_sem);
-			if (ret == -1) {
-				err_showE(" c:sem_wait");
-			}
-			 
-			if (ptrShMem->flag) {
-				//printf(" c:value = %ld\n", ptrShMem->val);
-				c_recive_value = true;
-				gSqureCRecieved	= ptrShMem->val;
-				//raise();pthread_self()
-				ptrShMem->flag = false;
-				
-				//sleep(5);
-				
-				sem_post(&ptrShMem->buff_is_free_sem);
-
-				pthread_kill( c2_tid, signumForC2Notification);
-				if (MAGIC_NUMBER == gSqureCRecieved)
-					kill(bpid, SIGUSR1);	//getppid()
-				fflush(stdout);
-			} else
-				printf(" c: flag false??");
-			
-			
-		} while (1);
-		//        key_t ftok(const char *path, int id);
-		//        Если нужно создать новую структуру IPC, а не получить ссылку на сущест
-		//вующую, следует в  аргументе flag вместе с  флагом IPC_CREAT указать флаг
-		//IPC_EXCL. В результате, если данная структура IPC уже существует, функция
-		//вернет признак ошибки с кодом EEXIST.
-		printf("!!exit c !!\n");
+		procC(bpid);
 		exit(0);
 	}
 
