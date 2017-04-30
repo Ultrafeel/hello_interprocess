@@ -186,6 +186,7 @@ void CheckAndPrint()
 
 	if (c_recive_value) {
 		printf(" c:value = %d\n", gSqureCRecieved);
+		c_recive_value = false;
 	} else {
 		printf(" c:strange call to ");
 		printf(__func__);
