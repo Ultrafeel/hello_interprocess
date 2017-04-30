@@ -1,8 +1,0 @@
-gcc -I. -c -Wall -std=c11 -g -c -o objdir/main_a.o main_a.c
-main_a.c: In function ‘main’:
-main_a.c:41:6: warning: variable ‘n’ set but not used [-Wunused-but-set-variable]
-  int n = EACCES;
-      ^
-gcc objdir/main_a.o    -o target_bin/bin/main_a
-gcc -I. -c -Wall -std=c11 -g -c -o objdir/main_b.o main_b.c
-gcc objdir/main_b.o    -o target_bin/bin/main_b
