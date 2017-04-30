@@ -57,7 +57,8 @@ int main(void) {
 	snprintf( pidEnv, 100, "PPID=%d", getpid());
 	putenv(pidEnv);
 	
-    FILE* ppf = popen("target_bin/bin/main_b" , "w");
+	//target_bin/bin
+    FILE* ppf = popen("./main_b" , "w");
     if (NULL == ppf) {
 		err_show("popen error");
 		exit(1);
