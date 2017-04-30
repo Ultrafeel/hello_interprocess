@@ -209,9 +209,9 @@ enum
 };
 void sig_recieve_mem_handle(int a)
 {	
-	printf(" c: sig_recieve_mem_handle thread id = %d - is created tread = %s\n",
-		(int)pthread_self(),
-		( pthread_equal(pthread_self(), c2_tid)?"true":"false"));	
+	//printf(" c: sig_recieve_mem_handle thread id = %d - is created tread = %s\n",
+	//	(int)pthread_self(),
+	//	( pthread_equal(pthread_self(), c2_tid)?"true":"false"));	
 
 	CheckAndPrint();
 }
@@ -273,11 +273,10 @@ pid_t c_pid = 0;
 
 pid_t pid_a;
 void procC(const pid_t bpid) {
-	puts("proc C started!");
+	puts("proc C started!\n");
 	
 	createTc2();
 	
-	//atexit(c_atexit);
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
 	sigemptyset(&sa.sa_mask);
@@ -296,7 +295,10 @@ void procC(const pid_t bpid) {
 		errno = 0;
 		int ret = sem_wait(&ptrShMem->buff_is_full_sem);
 		if (ret == -1) {
-			err_showE(" c:sem_wait");
+			if (EINTR == errno)
+				continue;
+			err_show(" c:sem_wait");
+			break;
 		}
 		
 		if (ptrShMem->flag) {
@@ -411,6 +413,8 @@ int main(int argc, char **argv)
 		/* Don’t rely on the value of tv now! */
 
 		if (retval == -1) {
+			if (EINTR == errno)
+				continue;
 			err_show("select()");
 			continue;
 		} else if (retval > 0)
@@ -478,9 +482,7 @@ int main(int argc, char **argv)
 	wait(NULL);
 	delSHM();
 	kill(pid_a, SIGTERM);
-	//write(STDOUT_FILENO, line, n); 
-	//int i = 0;
-	//scanf("%d", &i);
+
 	return 0;
 }
 

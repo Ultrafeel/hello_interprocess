@@ -6,6 +6,8 @@
 #include <bits/errno.h>
 #include  <stdint.h>
 #include  <inttypes.h>
+#include <signal.h>
+#include <string.h>
 enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
@@ -20,15 +22,34 @@ void err_sys(char const* str)
 }
 void err_show(char const* str)
 {     
-    printf("error: %s . erro = %d\n", str, errno);
+    printf("error: %s . errno = %d\n", str, errno);
+}
+
+volatile sig_atomic_t terminate_flag = 0;
+void terminator_sig_hndlr(int sn)
+{
+	printf("\n terminator_sig_hndlr, PID = %d, signum = %d\n", getpid(), sn);
+	terminate_flag = 1;
 }
 
 char pidEnv[100];
 int main(void) {
-    //int n = EACCES;
 
-    //int fd[2];
-    //pid_t pid; 
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(sa));
+
+	sigemptyset(&sa.sa_mask);
+	sa.sa_handler = &terminator_sig_hndlr;
+	if (sigaction(SIGTERM, &sa, NULL) < 0) {
+		err_show("ошибка вызова функции sigaction(SIGTERM)");
+		return 1;
+	}
+	sa.sa_handler = &terminator_sig_hndlr;
+	if (sigaction(SIGINT, &sa, NULL) < 0) {
+		err_show("ошибка вызова функции sigaction(SIGTERM)");
+		return 1;
+	}
+
     char line[MAXLINE];
     //execlp("sh", "-v", "-c" , //"ls",  
     //        "$PWD/target_bin/bin/"         "main_b",
@@ -49,7 +70,7 @@ int main(void) {
     // int fp = fileno(ppf);
     int n = 0;
     int nbytes = 0;
-    do {//char buff[BUFF_SIZE] = "";
+      while ((nbytes != -1) && !terminate_flag) {//char buff[BUFF_SIZE] = "";
         //gets( buff);
          printf(__FILE__" op N: %d\n", n);
          puts(" Insert number");
@@ -63,12 +84,10 @@ int main(void) {
         if (p != 0) {
            printf("read: %s\n", p);
         } else if (errno != 0) {
+			if (EINTR == errno)
+				continue;
             err_show("fgets");
-            continue;
-
-        } else {
-            printf(" fgets err\n");
-            continue;
+            break;
         }
 
 
@@ -86,7 +105,8 @@ int main(void) {
         fflush(ppf);
 
 
-    } while ((nbytes != -1));//&&(++n < 5)
+    };//&&(++n < 5)
+	
   	printf(" process a exit\n");
 
 	if (pclose(ppf) == -1)
