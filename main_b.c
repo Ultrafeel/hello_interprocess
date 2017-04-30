@@ -207,7 +207,8 @@ void sig_recieve_mem_handle(int a)
 	//	(int)pthread_self(),
 	//	( pthread_equal(pthread_self(), c2_tid)?"true":"false"));	
 
-	CheckAndPrint();
+	c_recive_value = true;
+	//CheckAndPrint();
 }
 
 volatile sig_atomic_t terminate_flag = 0;
@@ -227,6 +228,9 @@ void * c2_thr_fn(void *arg)
 	while (!terminate_flag) {
 		printf(" c:I am alive\n");
 
+		//с данным кодом "I am alive будет" выполнятся при прерывании, 
+		// а не только периодически.
+		
 		errno = 0;
 		//nanosleep прерывается по signal.
 		if (-1 == nanosleep(&ts, &tsret)) {
@@ -291,7 +295,7 @@ void procC(const pid_t bpid) {
 		
 		if (ptrShMem->flag) {
 
-			c_recive_value = true;
+			//c_recive_value = true;
 			gSqureCRecieved	= ptrShMem->val;
 
 			ptrShMem->flag = false;
@@ -304,7 +308,6 @@ void procC(const pid_t bpid) {
 			fflush(stdout);
 		} else
 			printf(" c: flag false??");
-		
 		
 	} ;
 
