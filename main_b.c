@@ -1,7 +1,7 @@
 /*
  * main_b.c
  * 
- * Copyright 2017 MML <mml@mml-N551JX>
+ * Copyright 2017 MML
  * 
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/wait.h>
-//#include <signum.h>
+
 enum {
 	BUFF_SIZE = 128,
 	MAXLINE = 128
@@ -85,8 +85,8 @@ enum {
 };
 volatile int shmid = 0;
 TShMem  * ptrShMem = 0;
-//char *;ptrShMem
 
+	
 void delSHM()
 {
 	if (0 != shmid) {
@@ -104,7 +104,6 @@ void delSHM()
 int initSharedMem(void)
 {
 
-
 	errno = 0;
 	if ((shmid = shmget(IPC_PRIVATE, MALLOC_SIZE2, IPC_CREAT | IPC_EXCL | 0666)) < 0)
 		err_showE("ошибка вызова функции shmget");
@@ -113,7 +112,6 @@ int initSharedMem(void)
 		err_showE("ошибка вызова функции shmat");
 	printf("сегмент разделяемой памяти присоединен в адресах от %p до %p\n",
 		(void *) ptrShMem, (void *) ptrShMem + MALLOC_SIZE2);
-	//	EACCES		13	/* Permission denied */
 
 	errno = 0;
 	// Mac OS X does not actually implement sem_init()
@@ -124,12 +122,9 @@ int initSharedMem(void)
     { printf("sem_init: failed: %s\n", strerror(errno)); }
 	
 	ptrShMem->flag = false;
-	//
-
 
 	return(0);
 }
-//----------------
 
 
 int timedWaitSem(sem_t * sem)
@@ -161,7 +156,8 @@ int timedWaitSem(sem_t * sem)
 	}
 	return err;
 }
-//-------
+
+
 int writeToShared(int isqr)
 {
 	int retc = timedWaitSem(&ptrShMem->buff_is_free_sem);
@@ -197,12 +193,11 @@ void CheckAndPrint()
 	}
 }
 
-enum
-{
+enum {
 	signumForC2Notification = SIGUSR2
 };
-enum
-{
+
+enum {
 	MAGIC_NUMBER = 100
 };
 void sig_recieve_mem_handle(int a)
@@ -340,7 +335,6 @@ int main(int argc, char **argv)
 
 	initSharedMem();
 	
-	//atexit(delSHM);
 	pid_t const bpid = getpid();
 
 	if ((c_pid = fork()) < 0) {
@@ -364,7 +358,6 @@ int main(int argc, char **argv)
 	sa.sa_handler = &terminator_sig_hndlr;
 	sigaction(SIGINT, &sa, NULL);
 
-	// setbuf(stdin, 0);
 	setvbuf(stdin, NULL, _IONBF, 0);
 
 	setvbuf(stdout, NULL, _IONBF, 0);
@@ -383,12 +376,10 @@ int main(int argc, char **argv)
 
 	char * pgs = 0;
 	bool haveResultNumToWrite = 0;
-	
-	//atexit  уже не нужен, т.к. проверяеься terminate_flag.
-	//atexit(0);
-	
+
 	unsigned long int isqr = -1;
 	while (!terminate_flag) {
+		
 		/* Wait up to five seconds. */
 		int const timeInSec = (haveResultNumToWrite ? 1: 5);
 		tv.tv_sec = timeInSec;
@@ -397,7 +388,6 @@ int main(int argc, char **argv)
 		rset = rfds;
 
 		retval = select(STDIN_FILENO + 1, &rset, NULL, NULL, &tv);
-		/* Don’t rely on the value of tv now! */
 
 		if (retval == -1) {
 			if (EINTR == errno)
@@ -452,16 +442,16 @@ int main(int argc, char **argv)
 				haveResultNumToWrite = 0;
 			} while ((pgs = strchr(pgs, '\n')) 
 				&& (++pgs, (pgs < (line + readn))) && !terminate_flag);
-				//vscanf("%d", &i);
-		} else if (readn < 0)//&&(errno != 0))
+
+		} else if (readn < 0)
 			err_show(" read");
 		else {
 			printf(" STDIN eof  zero \n");
 			break;
 		}
-		//else
+
 		++n;
-	}; //n < 22((pgs != 0)&& ());
+	};
 	printf(" process b exit\n");
 	
 	

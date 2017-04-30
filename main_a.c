@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include "apue.h"
 #include <unistd.h>
 #include <errno.h>
 #include <bits/errno.h>
@@ -51,9 +50,7 @@ int main(void) {
 	}
 
     char line[MAXLINE];
-    //execlp("sh", "-v", "-c" , //"ls",  
-    //        "$PWD/target_bin/bin/"         "main_b",
-    //        (char*)0);
+ 
 	printf(  " a:Proc A PID=%d\n", getpid());
 	
 	//это будет считано в proc B.
@@ -67,19 +64,17 @@ int main(void) {
         err_show("popen error");
         exit(1);
     }
-    // int fp = fileno(ppf);
+
     int n = 0;
     int nbytes = 0;
-      while ((nbytes != -1) && !terminate_flag) {//char buff[BUFF_SIZE] = "";
-        //gets( buff);
-         printf(__FILE__" op N: %d\n", n);
+      while ((nbytes != -1) && !terminate_flag) {
+
+		  printf(__FILE__" op N: %d\n", n);
          puts(" Insert number");
         int32_t i = 0;
 
-        //char *p;
-
         errno = 0;
-        //int scr = scanf("%+"SCNi32, &i);
+
         char *p = fgets(line, MAXLINE, stdin);
         if (p != 0) {
            printf("read: %s\n", p);
@@ -94,7 +89,7 @@ int main(void) {
         printf(" fgets get: '%s' str\n", p);
         i = atoi(p);
         printf(" Inserted number: %"PRId32"\n", i);
-        //fflush();
+
         errno = 0;
         nbytes = fprintf(ppf, "%"PRId32"\n", i);
         //nbytes = write( fp,&i, sizeof(i));
@@ -105,7 +100,7 @@ int main(void) {
         fflush(ppf);
 
 
-    };//&&(++n < 5)
+    };
 	
   	printf(" process a exit\n");
 
