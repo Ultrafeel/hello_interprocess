@@ -181,16 +181,18 @@ volatile sig_atomic_t  c_recive_value = false;
 volatile int gSqureCRecieved = -1;
 pthread_t c2_tid;
 
-void CheckAndPrint()
+bool CheckAndPrint()
 {
 
 	if (c_recive_value) {
 		printf(" c:value = %d\n", gSqureCRecieved);
 		c_recive_value = false;
+		return true;
 	} else {
-		printf(" c:strange call to ");
-		printf(__func__);
-		printf(" function\n");
+		//printf(" c:strange call to ");
+		//printf(__func__);
+		//printf(" function\n");
+		return false;
 	}
 }
 
@@ -206,7 +208,6 @@ void sig_recieve_mem_handle(int a)
 	//printf(" c: sig_recieve_mem_handle thread id = %d - is created tread = %s\n",
 	//	(int)pthread_self(),
 	//	( pthread_equal(pthread_self(), c2_tid)?"true":"false"));	
-
 	c_recive_value = true;
 	//CheckAndPrint();
 }
@@ -221,31 +222,24 @@ void terminator_sig_hndlr(int sn)
 void * c2_thr_fn(void *arg)
 {
     printf(" c:  thread 2 ");
-	struct timespec const ts1s = {.tv_sec = 1, .tv_nsec = 0};
-	struct timespec ts = ts1s;
-	
-	struct timespec tsret;
-	while (!terminate_flag) {
-		printf(" c:I am alive\n");
 
+	struct timespec ts;
+	ts.tv_sec = 1;
+	ts.tv_nsec = 0;
+	//struct timespec tsret;
+	while (!terminate_flag) {
 		//с данным кодом "I am alive будет" выполнятся при прерывании, 
 		// а не только периодически.
-		
-		errno = 0;
+		if (!CheckAndPrint())
+			printf(" c:I am alive\n");
+
 		//nanosleep прерывается по signal.
-		if (-1 == nanosleep(&ts, &tsret)) {
+		if (-1 == nanosleep(&ts, NULL)) {
 			if (EINTR != errno) {
 				err_show(" nanosleep");
 				break;
-			} else {
-				CheckAndPrint();
-				ts = tsret;
-				continue;
 			}
-		} else {
-			ts = ts1s;
 		}
-
 	};
 	printf(" c: C2 exits\n");
     return((void *)0);
