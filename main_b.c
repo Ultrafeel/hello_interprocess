@@ -53,14 +53,14 @@ void err_sys(char const* str)
 
 void err_show(char const* str)
 {
-	printf("error: %s . erro = %d, err description: %s\n", str, errno, strerror(errno));
+	printf("error: %s . errno = %d, err description: %s\n", str, errno, strerror(errno));
 }
 void delSHM();
 void err_showE(char const* str)
 {
 	err_show(str);
-	printf("process will exit due to error.");
-	//ничего не делает, если пямять ещё не выделена.
+	printf("process will exit due to error.\n");
+	//ничего не делает, если память ещё не выделена.
 	delSHM();
 	exit(1);
 }
