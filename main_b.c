@@ -187,16 +187,14 @@ pthread_t c2_tid;
 
 void CheckAndPrint()
 {
-	
-		if (c_recive_value) {
+
+	if (c_recive_value) {
 		printf(" c:value = %d\n", gSqureCRecieved);
+	} else {
+		printf(" c:strange call to ");
+		printf(__func__);
+		printf(" function\n");
 	}
-	else
-	{
-		printf(" c:strange call to ") ; printf(__func__);
-		 printf(" function\n");
-	}
-	//__FUNCTION__ __func__ __PRETTY_FUNCTION__
 }
 
 enum
@@ -302,14 +300,12 @@ void procC(const pid_t bpid) {
 		}
 		
 		if (ptrShMem->flag) {
-			//printf(" c:value = %ld\n", ptrShMem->val);
+
 			c_recive_value = true;
 			gSqureCRecieved	= ptrShMem->val;
-			//raise();pthread_self()
+
 			ptrShMem->flag = false;
-			
-			//sleep(5);
-			
+	
 			sem_post(&ptrShMem->buff_is_free_sem);
 			
 			pthread_kill( c2_tid, signumForC2Notification);
@@ -321,11 +317,7 @@ void procC(const pid_t bpid) {
 		
 		
 	} ;
-	//        key_t ftok(const char *path, int id);
-	//        Если нужно создать новую структуру IPC, а не получить ссылку на сущест
-	//вующую, следует в  аргументе flag вместе с  флагом IPC_CREAT указать флаг
-	//IPC_EXCL. В результате, если данная структура IPC уже существует, функция
-	//вернет признак ошибки с кодом EEXIST.
+
 	printf("!!exit c !!\n");
 	exit(0);
 }
