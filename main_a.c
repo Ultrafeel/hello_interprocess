@@ -57,58 +57,53 @@ int main(void) {
 	snprintf( pidEnv, 100, "PPID=%d", getpid());
 	putenv(pidEnv);
 	
-    FILE* ppf = popen(//"ls"
-            "target_bin/bin/main_b"
-            , "w");
+    FILE* ppf = popen("target_bin/bin/main_b" , "w");
     if (NULL == ppf) {
-        err_show("popen error");
-        exit(1);
-    }
+		err_show("popen error");
+		exit(1);
+	}
 
-    int n = 0;
-    int nbytes = 0;
-      while ((nbytes != -1) && !terminate_flag) {
+	int nbytes = 0;
+	while ((nbytes != -1) && !terminate_flag) {
 
-		  printf(__FILE__" op N: %d\n", n);
-         puts(" Insert number");
-        int32_t i = 0;
+		puts(" Insert number");
+		int32_t i = 0;
 
-        errno = 0;
+		errno = 0;
 
-        char *p = fgets(line, MAXLINE, stdin);
-        if (p != 0) {
-           printf("read: %s\n", p);
-        } else if (errno != 0) {
+		char *p = fgets(line, MAXLINE, stdin);
+		if (p != 0) {
+			printf("read: %s\n", p);
+		} else if (errno != 0) {
 			if (EINTR == errno)
 				continue;
-            err_show("fgets");
-            break;
-        }
+			err_show("fgets");
+			break;
+		}
 
 
-        printf(" fgets get: '%s' str\n", p);
-        i = atoi(p);
-        printf(" Inserted number: %"PRId32"\n", i);
+		printf(" fgets get: '%s' str\n", p);
+		i = atoi(p);
+		printf(" Inserted number: %"PRId32"\n", i);
 
-        errno = 0;
-        nbytes = fprintf(ppf, "%"PRId32"\n", i);
-        //nbytes = write( fp,&i, sizeof(i));
-        if (nbytes == -1)
-            err_show("error pipe fprintf");
-        else
-            printf(" fprintf transmitted: %+d\n", nbytes);
-        fflush(ppf);
+		errno = 0;
+		nbytes = fprintf(ppf, "%"PRId32"\n", i);
+		//nbytes = write( fp,&i, sizeof(i));
+		if (nbytes == -1)
+			err_show("error pipe fprintf");
+		else
+			printf(" fprintf transmitted: %+d\n", nbytes);
+		fflush(ppf);
 
 
-    };
-	
-  	printf(" process a exit\n");
+	};
 
-	if (pclose(ppf) == -1)
-	{
+	printf(" process a exit\n");
+
+	if (pclose(ppf) == -1) {
 		err_show("calling pclose");
 		return -1;
 	}
-    exit(0);
+	exit(0);
 }
 
