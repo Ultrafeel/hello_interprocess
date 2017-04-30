@@ -224,9 +224,9 @@ void terminator_sig_hndlr(int sn)
 void * c2_thr_fn(void *arg)
 {
     printf(" c:  thread 2 ");
-	struct timespec ts;
-	ts.tv_sec = 1;
-	ts.tv_nsec = 0;	
+	struct timespec const ts1s = {.tv_sec = 1, .tv_nsec = 0};
+	struct timespec ts = ts1s;
+	
 	struct timespec tsret;
 	while (!terminate_flag) {
 		printf(" c:I am alive\n");
@@ -235,7 +235,6 @@ void * c2_thr_fn(void *arg)
 		//nanosleep прерывается по signal.
 		if (-1 == nanosleep(&ts, &tsret)) {
 			if (EINTR != errno) {
-				CheckAndPrint();
 				err_show(" nanosleep");
 				break;
 			} else {
@@ -244,11 +243,11 @@ void * c2_thr_fn(void *arg)
 				continue;
 			}
 		} else {
-			ts.tv_sec = 1;
-			ts.tv_nsec = 0;
+			ts = ts1s;
 		}
 
 	};
+	printf(" c: C2 exits\n");
     return((void *)0);
 }
 
