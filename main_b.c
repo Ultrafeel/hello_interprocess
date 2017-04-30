@@ -55,13 +55,13 @@ void err_show(char const* str)
 {
 	printf("error: %s . errno = %d, err description: %s\n", str, errno, strerror(errno));
 }
-void delSHM();
+void del_shared_mem_n_sem();
 void err_showE(char const* str)
 {
 	err_show(str);
 	printf("process will exit due to error.\n");
 	//ничего не делает, если память ещё не выделена.
-	delSHM();
+	del_shared_mem_n_sem();
 	exit(1);
 }
 
@@ -84,15 +84,15 @@ enum {
 	MALLOC_SIZE2 = sizeof(TShMem)
 };
 volatile int shmid = 0;
-TShMem  * ptrShMem = 0;
+TShMem  * g_ptr_sh_mem = 0;
 
 	
-void delSHM()
+void del_shared_mem_n_sem()
 {
 	if (0 != shmid) {
 		
-		sem_destroy(&ptrShMem->buff_is_free_sem);
-		sem_destroy(&ptrShMem->buff_is_full_sem);
+		sem_destroy(&g_ptr_sh_mem->buff_is_free_sem);
+		sem_destroy(&g_ptr_sh_mem->buff_is_full_sem);
 
 		if (shmctl(shmid, IPC_RMID, 0) < 0)
 			err_sys("ошибка вызова функции shmctl");
@@ -108,26 +108,26 @@ int initSharedMem(void)
 	if ((shmid = shmget(IPC_PRIVATE, MALLOC_SIZE2, IPC_CREAT | IPC_EXCL | 0666)) < 0)
 		err_showE("ошибка вызова функции shmget");
 	errno = 0;
-	if ((ptrShMem = shmat(shmid, 0, 0)) == (void *) - 1)
+	if ((g_ptr_sh_mem = shmat(shmid, 0, 0)) == (void *) - 1)
 		err_showE("ошибка вызова функции shmat");
 	printf("сегмент разделяемой памяти присоединен в адресах от %p до %p\n",
-		(void *) ptrShMem, (void *) ptrShMem + MALLOC_SIZE2);
+		(void *) g_ptr_sh_mem, (void *) g_ptr_sh_mem + MALLOC_SIZE2);
 
 	errno = 0;
 	// Mac OS X does not actually implement sem_init()
-	if (sem_init(&ptrShMem->buff_is_free_sem, 1, 1) == -1)
+	if (sem_init(&g_ptr_sh_mem->buff_is_free_sem, 1, 1) == -1)
     { printf("sem_init: failed: %s\n", strerror(errno)); }
 	
-	if (sem_init(&ptrShMem->buff_is_full_sem, 1, 0) == -1)
+	if (sem_init(&g_ptr_sh_mem->buff_is_full_sem, 1, 0) == -1)
     { printf("sem_init: failed: %s\n", strerror(errno)); }
 	
-	ptrShMem->flag = false;
+	g_ptr_sh_mem->flag = false;
 
 	return(0);
 }
 
 
-int timedWaitSem(sem_t * sem)
+int timed_wait_sem(sem_t * sem)
 {
 	int err = -1;
 	struct timespec tout;
@@ -158,34 +158,36 @@ int timedWaitSem(sem_t * sem)
 }
 
 
-int writeToShared(int isqr)
+int write_to_shared(int isqr)
 {
-	int retc = timedWaitSem(&ptrShMem->buff_is_free_sem);
+	int retc = timed_wait_sem(&g_ptr_sh_mem->buff_is_free_sem);
 	if (0 != retc)
 		return retc;
 
-	if (ptrShMem->flag)
+	if (g_ptr_sh_mem->flag)
 		printf("sh mem is busy! override !\n");
 	
 	
 
-	ptrShMem->flag = true;
-	ptrShMem->val = isqr;
+	g_ptr_sh_mem->flag = true;
+	g_ptr_sh_mem->val = isqr;
 	
-	sem_post(&ptrShMem->buff_is_full_sem);
+	sem_post(&g_ptr_sh_mem->buff_is_full_sem);
 	
 	return 0;
 }
 
+//эти передаются между потоками в процессе С.
 volatile sig_atomic_t  c_recive_value = false;
-volatile int gSqureCRecieved = -1;
+volatile int g_square_recieved = -1;
+
 pthread_t c2_tid;
 
-bool CheckAndPrint()
+bool check_and_print_square()
 {
 
 	if (c_recive_value) {
-		printf(" c:value = %d\n", gSqureCRecieved);
+		printf(" c:value = %d\n", g_square_recieved);
 		c_recive_value = false;
 		return true;
 	} else {
@@ -230,7 +232,7 @@ void * c2_thr_fn(void *arg)
 	while (!terminate_flag) {
 		//с данным кодом "I am alive будет" выполнятся при прерывании, 
 		// а не только периодически.
-		if (!CheckAndPrint())
+		if (!check_and_print_square())
 			printf(" c:I am alive\n");
 
 		//nanosleep прерывается по signal.
@@ -245,7 +247,7 @@ void * c2_thr_fn(void *arg)
     return((void *)0);
 }
 
-int createTc2(void)
+int create_thread_c2(void)
 {
 	int err = 0;
 	err = pthread_create(&c2_tid, NULL, c2_thr_fn, NULL);
@@ -258,10 +260,10 @@ int createTc2(void)
 
 
 
-void procC(const pid_t bpid) {
+void proc_c(const pid_t bpid) {
 	puts("proc C started!\n");
 	
-	createTc2();
+	create_thread_c2();
 	
 	struct sigaction sa;
 	memset(&sa, 0, sizeof(sa));
@@ -279,7 +281,7 @@ void procC(const pid_t bpid) {
 
 	while (!terminate_flag) {
 		errno = 0;
-		int ret = sem_wait(&ptrShMem->buff_is_full_sem);
+		int ret = sem_wait(&g_ptr_sh_mem->buff_is_full_sem);
 		if (ret == -1) {
 			if (EINTR == errno)
 				continue;
@@ -287,17 +289,17 @@ void procC(const pid_t bpid) {
 			break;
 		}
 		
-		if (ptrShMem->flag) {
+		if (g_ptr_sh_mem->flag) {
 
 			//c_recive_value = true;
-			gSqureCRecieved	= ptrShMem->val;
+			g_square_recieved	= g_ptr_sh_mem->val;
 
-			ptrShMem->flag = false;
+			g_ptr_sh_mem->flag = false;
 	
-			sem_post(&ptrShMem->buff_is_free_sem);
+			sem_post(&g_ptr_sh_mem->buff_is_free_sem);
 			
 			pthread_kill( c2_tid, signumForC2Notification);
-			if (MAGIC_NUMBER == gSqureCRecieved)
+			if (MAGIC_NUMBER == g_square_recieved)
 				kill(bpid, SIGUSR1);	//getppid()
 			fflush(stdout);
 		} else
@@ -341,12 +343,12 @@ int main(int argc, char **argv)
 	pid_t c_pid = 0;
 	if ((c_pid = fork()) < 0) {
 		err_show("fork");
-		delSHM();
+		del_shared_mem_n_sem();
 		kill(pid_a, SIGTERM);
 		return(1);
 		/* значение errno будет установлено функцией fork() */
 	} else if (c_pid == 0) { /* дочерний процесс */
-		procC(bpid);
+		proc_c(bpid);
 		exit(0);
 	}
 
@@ -417,7 +419,7 @@ int main(int argc, char **argv)
 		if (haveResultNumToWrite == 1) {
 			printf(" b:!!write pending num square: %lu\n", isqr);
 
-			if (0 != writeToShared(isqr)) {
+			if (0 != write_to_shared(isqr)) {
 				haveResultNumToWrite = 0;
 				isqr = -1;
 			}
@@ -439,7 +441,7 @@ int main(int argc, char **argv)
 
 				printf(" b:num square: %lu\n", isqr);
 
-				if (0 != writeToShared(isqr))
+				if (0 != write_to_shared(isqr))
 					continue;
 
 				haveResultNumToWrite = 0;
@@ -460,7 +462,7 @@ int main(int argc, char **argv)
 	
 	kill(c_pid, SIGTERM);
 	wait(NULL);
-	delSHM();
+	del_shared_mem_n_sem();
 	kill(pid_a, SIGTERM);
 
 	return 0;
