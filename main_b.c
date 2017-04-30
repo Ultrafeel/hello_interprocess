@@ -257,9 +257,8 @@ int createTc2(void)
 	return err;
 }
 
-pid_t c_pid = 0;
 
-pid_t pid_a;
+
 void procC(const pid_t bpid) {
 	puts("proc C started!\n");
 	
@@ -321,6 +320,7 @@ int main(int argc, char **argv)
 
 	}
 	char const * procA_pid = getenv("PPID");
+	pid_t pid_a;
 	if (procA_pid)
 	{
 		printf("proc a pid = %s\n", procA_pid);
@@ -336,7 +336,8 @@ int main(int argc, char **argv)
 	initSharedMem();
 	
 	pid_t const bpid = getpid();
-
+	
+	pid_t c_pid = 0;
 	if ((c_pid = fork()) < 0) {
 		err_show("fork");
 		delSHM();
