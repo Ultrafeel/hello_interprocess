@@ -341,6 +341,7 @@ int main(int argc, char **argv)
 	if ((c_pid = fork()) < 0) {
 		err_show("fork");
 		delSHM();
+		kill(pid_a, SIGTERM);
 		return(1);
 		/* значение errno будет установлено функцией fork() */
 	} else if (c_pid == 0) { /* дочерний процесс */
