@@ -223,36 +223,32 @@ void terminator_sig_hndlr(int sn)
 
 void * c2_thr_fn(void *arg)
 {
-
     printf(" c:  thread 2 ");
 	struct timespec ts;
-	/*
-	struct timespec tsret;*/
-	while(!terminate_flag) 
-	{
+	ts.tv_sec = 1;
+	ts.tv_nsec = 0;	
+	struct timespec tsret;
+	while (!terminate_flag) {
 		printf(" c:I am alive\n");
-		ts.tv_sec = 1;
-		ts.tv_nsec = 0;
-		//sleep(1);
-		//nanosleep прерывается по signal.
-		nanosleep(&ts, NULL);
-		/*
-		int sret = nanosleep(&ts, &tsret);
-		if (EINTR != sret) {
-			CheckAndPrint();
-		} else {
-			struct timespec tsret2;
-			do {
-				CheckAndPrint();
-				sret = nanosleep(&tsret, &tsret2);
-				if (EINTR == sret) {
-					tsret = tsret;
-				} else
-					break;
-			} while (1);
-		}*/
 
-	} ;
+		errno = 0;
+		//nanosleep прерывается по signal.
+		if (-1 == nanosleep(&ts, &tsret)) {
+			if (EINTR != errno) {
+				CheckAndPrint();
+				err_show(" nanosleep");
+				break;
+			} else {
+				CheckAndPrint();
+				ts = tsret;
+				continue;
+			}
+		} else {
+			ts.tv_sec = 1;
+			ts.tv_nsec = 0;
+		}
+
+	};
     return((void *)0);
 }
 
