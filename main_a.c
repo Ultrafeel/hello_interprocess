@@ -23,7 +23,7 @@ void err_show(char const* str)
     printf("error: %s . erro = %d\n", str, errno);
 }
 
-
+char pidEnv[100];
 int main(void) {
     //int n = EACCES;
 
@@ -33,6 +33,12 @@ int main(void) {
     //execlp("sh", "-v", "-c" , //"ls",  
     //        "$PWD/target_bin/bin/"         "main_b",
     //        (char*)0);
+	printf(  " a:Proc A PID=%d\n", getpid());
+	
+	//это будет считано в proc B.
+	snprintf( pidEnv, 100, "PPID=%d", getpid());
+	putenv(pidEnv);
+	
     FILE* ppf = popen(//"ls"
             "target_bin/bin/main_b"
             , "w");

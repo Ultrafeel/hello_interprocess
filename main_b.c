@@ -38,6 +38,7 @@
 #include <semaphore.h>
 #include <string.h>
 #include <signal.h>
+#include <sys/wait.h>
 //#include <signum.h>
 enum {
 	BUFF_SIZE = 128,
@@ -55,10 +56,13 @@ void err_show(char const* str)
 	printf("error: %s . erro = %d, err description: %s\n", str, errno, strerror(errno));
 }
 
+void delSHM();
 void err_showE(char const* str)
 {
 	err_show(str);
 	printf("process will exit due to error.");
+	//ничего не делает, если пямять ещё не выделена.
+	delSHM();
 	exit(1);
 }
 
@@ -263,10 +267,9 @@ void terminator_sig_hndlr(int sn)
 {
 	printf(" b:terminator_sig_hndlr");
 	terminate_flag = 1;
-	kill(c_pid, SIGTERM);
 }
 
-
+pid_t pid_a;
 int main(int argc, char **argv)
 {
 	puts(__FILE__" Hello");
@@ -275,12 +278,27 @@ int main(int argc, char **argv)
 		printf(" Hello, arg = %s\n", argv[0]);
 
 	}
+	char const * procA_pid = getenv("PPID");
+	if (procA_pid)
+	{
+		printf("proc a pid = %s\n", procA_pid);
+		pid_a = atoi(procA_pid);
+	}
+	else
+	{
+		printf("proc a pid not f\n");
+		pid_a = getppid();
+
+	}
+
 	initSharedMem();
+	
 	//atexit(delSHM);
 	pid_t const bpid = getpid();
 
 	if ((c_pid = fork()) < 0) {
 		err_show("fork");
+		delSHM();
 		return(1);
 		/* значение errno будет установлено функцией fork() */
 	} else if (c_pid == 0) { /* дочерний процесс */
@@ -427,18 +445,25 @@ int main(int argc, char **argv)
 					continue;
 
 				haveResultNumToWrite = 0;
-			} while ((pgs = strchr(pgs, '\n')) && (++pgs, (pgs < (line + readn))));
+			} while ((pgs = strchr(pgs, '\n')) 
+				&& (++pgs, (pgs < (line + readn))) && !terminate_flag);
 				//vscanf("%d", &i);
 		} else if (readn < 0)//&&(errno != 0))
 			err_show(" read");
 		else {
 			printf(" STDIN eof  zero \n");
+			break;
 		}
 		//else
 		++n;
 	}; //n < 22((pgs != 0)&& ());
 	printf(" process b exit\n");
+	
+	
+	kill(c_pid, SIGTERM);
+	wait(NULL);
 	delSHM();
+	kill(pid_a, SIGTERM);
 	//write(STDOUT_FILENO, line, n); 
 	//int i = 0;
 	//scanf("%d", &i);
