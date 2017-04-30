@@ -216,18 +216,28 @@ void sig_recieve_mem_handle(int a)
 	CheckAndPrint();
 }
 
+volatile sig_atomic_t terminate_flag = 0;
+void terminator_sig_hndlr(int sn)
+{
+	printf("\n terminator_sig_hndlr, PID = %d, signum = %d\n", getpid(), sn);
+	terminate_flag = 1;
+}
+
 void * c2_thr_fn(void *arg)
 {
 
     printf(" c:  thread 2 ");
-	/*struct timespec ts;
-	ts.tv_sec = 1;
-	ts.tv_nsec = 0;
+	struct timespec ts;
+	/*
 	struct timespec tsret;*/
-	do 
+	while(!terminate_flag) 
 	{
 		printf(" c:I am alive\n");
-		sleep(5);
+		ts.tv_sec = 1;
+		ts.tv_nsec = 0;
+		//sleep(1);
+		//nanosleep прерывается по signal.
+		nanosleep(&ts, NULL);
 		/*
 		int sret = nanosleep(&ts, &tsret);
 		if (EINTR != sret) {
@@ -244,7 +254,7 @@ void * c2_thr_fn(void *arg)
 			} while (1);
 		}*/
 
-	} while (1);
+	} ;
     return((void *)0);
 }
 
@@ -261,13 +271,6 @@ int createTc2(void)
 
 pid_t c_pid = 0;
 
-volatile sig_atomic_t terminate_flag = 0;
-void terminator_sig_hndlr(int sn)
-{
-	printf(" b:terminator_sig_hndlr");
-	terminate_flag = 1;
-}
-
 pid_t pid_a;
 void procC(const pid_t bpid) {
 	puts("proc C started!");
@@ -280,9 +283,16 @@ void procC(const pid_t bpid) {
 	sigemptyset(&sa.sa_mask);
 	sa.sa_handler = &sig_recieve_mem_handle;
 	if (sigaction(signumForC2Notification, &sa, NULL) < 0)
-		err_showE("ошибка вызова функции signal(SIGALRM)");
-	
-	do {
+		err_showE("ошибка вызова функции sigaction()");
+	sigemptyset(&sa.sa_mask);
+	sa.sa_handler = &terminator_sig_hndlr;
+	if (sigaction(SIGTERM, &sa, NULL) < 0)
+		err_showE("ошибка вызова функции sigaction(SIGTERM)");
+	sa.sa_handler = &terminator_sig_hndlr;
+	if (sigaction(SIGINT, &sa, NULL) < 0)
+		err_showE("ошибка вызова функции sigaction(SIGTERM)");
+
+	while (!terminate_flag) {
 		errno = 0;
 		int ret = sem_wait(&ptrShMem->buff_is_full_sem);
 		if (ret == -1) {
@@ -308,7 +318,7 @@ void procC(const pid_t bpid) {
 			printf(" c: flag false??");
 		
 		
-	} while (1);
+	} ;
 	//        key_t ftok(const char *path, int id);
 	//        Если нужно создать новую структуру IPC, а не получить ссылку на сущест
 	//вующую, следует в  аргументе flag вместе с  флагом IPC_CREAT указать флаг
