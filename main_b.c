@@ -134,15 +134,15 @@ int timed_wait_sem(sem_t * sem)
 	clock_gettime(CLOCK_REALTIME, &tout);
 
 	tout.tv_sec += 5; /* добавим се­кунд, начиная от текущего времени */
-
+	errno = 0;
 	err = sem_timedwait(sem, &tout);
 
 	if (err == 0)
 		printf("sem заперт!\n");
 	else
 	{
-		printf("не получилось  запереть sem: %d\n", err);
-		if (ETIMEDOUT == err)
+		printf("не получилось  запереть sem: %d\n", errno);
+		if (ETIMEDOUT == errno)
 			printf("ETIMEDOUT");
 		printf("\n");
 			
