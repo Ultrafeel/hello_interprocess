@@ -131,26 +131,19 @@ int timed_wait_sem(sem_t * sem)
 {
 	int err = -1;
 	struct timespec tout;
-	struct tm *tmp;
 	clock_gettime(CLOCK_REALTIME, &tout);
-	tmp = localtime(&tout.tv_sec);
-	char buf[64];
-	strftime(buf, sizeof(buf), "%r", tmp);
-	wprintf(L"те­ку­щее вре­мя: %s\n", buf);
-	tout.tv_sec += 5; /* 10 се­кунд, на­чи­ная от те­ку­ще­го вре­ме­ни */
 
+	tout.tv_sec += 5; /* добавим се­кунд, начиная от текущего времени */
+	errno = 0;
 	err = sem_timedwait(sem, &tout);
-	clock_gettime(CLOCK_REALTIME, &tout);
-	tmp = localtime(&tout.tv_sec);
-	strftime(buf, sizeof(buf), "%r", tmp);
-	wprintf(L"те­ку­щее вре­мя: %s\n", buf);
+
 	if (err == 0)
-		wprintf(L"sem заперт!\n");
+		printf("sem заперт!\n");
 	else
 	{
-		wprintf(L"не по­лу­чи­лось по­втор­но за­пе­реть sem: %d\n", err);
-		if (ETIMEDOUT == err)
-			wprintf(L"ETIMEDOUT");
+		printf("не получилось  запереть sem: %d\n", errno);
+		if (ETIMEDOUT == errno)
+			printf("ETIMEDOUT");
 		printf("\n");
 			
 	}
@@ -297,7 +290,7 @@ void proc_c(const pid_t bpid) {
 			g_ptr_sh_mem->flag = false;
 	
 			sem_post(&g_ptr_sh_mem->buff_is_free_sem);
-			
+			//simulate busy : sleep(5);
 			pthread_kill( c2_tid, signumForC2Notification);
 			if (MAGIC_NUMBER == g_square_recieved)
 				kill(bpid, SIGUSR1);	//getppid()
@@ -316,7 +309,7 @@ void proc_c(const pid_t bpid) {
 
 int main(int argc, char **argv)
 {
-	puts(__FILE__" Hello");
+	puts( " c:" __FILE__ " Hello");
 
 	if (argc > 0) {
 		printf(" Hello, arg = %s\n", argv[0]);
@@ -331,7 +324,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("proc a pid not f\n");
+		printf("proc a pid not found in environment\n");
 		pid_a = getppid();
 
 	}
@@ -366,95 +359,45 @@ int main(int argc, char **argv)
 	setvbuf(stdin, NULL, _IONBF, 0);
 
 	setvbuf(stdout, NULL, _IONBF, 0);
-	int i;
-	char line[MAXLINE] = "";
-
-	fd_set rfds, rset;
-	struct timeval tv;
-	int retval;
-
-	/* Watch stdin (fd 0) to see when it has input. */
-	FD_ZERO(&rfds);
-	FD_SET(STDIN_FILENO, &rfds);
 
 	int n = -1;
-
-	char * pgs = 0;
-	bool haveResultNumToWrite = 0;
 
 	unsigned long int isqr = -1;
 	while (!terminate_flag) {
 		
-		/* Wait up to five seconds. */
-		int const timeInSec = (haveResultNumToWrite ? 1: 5);
-		tv.tv_sec = timeInSec;
-		tv.tv_usec = 0;
-		errno = 0;
-		rset = rfds;
-
-		retval = select(STDIN_FILENO + 1, &rset, NULL, NULL, &tv);
-
-		if (retval == -1) {
-			if (EINTR == errno)
-				continue;
-			err_show("select()");
-			continue;
-		} else if (retval > 0)
-			if (FD_ISSET(STDIN_FILENO, &rset))
-				printf(" b:Data is available now. %d\n", retval);
-			else {
-
-				printf(" b:select Data is not available now.\n");
-				continue;
-			}
-		else {
-			//printf(" b%d", timeInSec);//No data within %d seconds.\n
-			continue;
-		}
-
-		printf("  b:op N: %d\n", n);
-		pgs = line;
-			*line = '0';
-
-		if (haveResultNumToWrite == 1) {
-			printf(" b:!!write pending num square: %lu\n", isqr);
-
-			if (0 != write_to_shared(isqr)) {
-				haveResultNumToWrite = 0;
-				isqr = -1;
-			}
-		}
-
+		int i = -1;
 		errno = 0;
 		//fgets(line, MAXLINE, stdin);
-		int readn = read(STDIN_FILENO, line, MAXLINE - 1);
-		if (readn > 0) {
-			printf(" b:line recieved: '%s'\n", pgs);
-			do {
-				if (haveResultNumToWrite)
-					printf(" b: transmitting number skipped : %lu. Reason: c was busy\n", isqr);
-				i = atoi(pgs);
+		int readn = scanf("%d", &i);
+		if (readn == EOF) {
+			if (ferror(stdin)) {
+				if (EINTR == errno) {
+					continue;
+				} else {
+					err_show(" b:scanf");
+					break;
+				}
+			} else {
+				printf(" b:STDIN eof  zero \n");
+				break;
+			}
+		} else if (1 == readn)
+		{
 				printf(" b:num recieved: %d\n", i);
 				isqr = i*i;
 
-				haveResultNumToWrite = 1;
 
 				printf(" b:num square: %lu\n", isqr);
 
-				if (0 != write_to_shared(isqr))
+				if (0 != write_to_shared(isqr)) {
+					printf(" b: transmitting number skipped : %lu. Reason: c was busy\n", isqr);
 					continue;
-
-				haveResultNumToWrite = 0;
-			} while ((pgs = strchr(pgs, '\n')) 
-				&& (++pgs, (pgs < (line + readn))) && !terminate_flag);
-
-		} else if (readn < 0)
-			err_show(" read");
-		else {
-			printf(" STDIN eof  zero \n");
-			break;
+				}
+		} 
+		else 
+		{
+			printf(" b:scanf nothing converted \n");
 		}
-
 		++n;
 	};
 	printf(" process b exit\n");
