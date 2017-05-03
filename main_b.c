@@ -136,19 +136,19 @@ int timed_wait_sem(sem_t * sem)
 	tmp = localtime(&tout.tv_sec);
 	char buf[64];
 	strftime(buf, sizeof(buf), "%r", tmp);
-	wprintf(L"те­ку­щее вре­мя: %s\n", buf);
+	printf("текущее время: %s\n", buf);
 	tout.tv_sec += 5; /* 10 се­кунд, на­чи­ная от те­ку­ще­го вре­ме­ни */
 
 	err = sem_timedwait(sem, &tout);
 	clock_gettime(CLOCK_REALTIME, &tout);
 	tmp = localtime(&tout.tv_sec);
 	strftime(buf, sizeof(buf), "%r", tmp);
-	wprintf(L"те­ку­щее вре­мя: %s\n", buf);
+	printf("текущее время: %s\n", buf);
 	if (err == 0)
 		wprintf(L"sem заперт!\n");
 	else
 	{
-		wprintf(L"не по­лу­чи­лось по­втор­но за­пе­реть sem: %d\n", err);
+		wprintf(L"не получилось  запереть sem: %d\n", err);
 		if (ETIMEDOUT == err)
 			wprintf(L"ETIMEDOUT");
 		printf("\n");
@@ -316,7 +316,7 @@ void proc_c(const pid_t bpid) {
 
 int main(int argc, char **argv)
 {
-	puts(__FILE__" Hello");
+	puts( " c:" __FILE__ " Hello");
 
 	if (argc > 0) {
 		printf(" Hello, arg = %s\n", argv[0]);
@@ -331,7 +331,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("proc a pid not f\n");
+		printf("proc a pid not found in environment\n");
 		pid_a = getppid();
 
 	}
@@ -400,9 +400,9 @@ int main(int argc, char **argv)
 			err_show("select()");
 			continue;
 		} else if (retval > 0)
-			if (FD_ISSET(STDIN_FILENO, &rset))
-				printf(" b:Data is available now. %d\n", retval);
-			else {
+			if (FD_ISSET(STDIN_FILENO, &rset)) {
+				//printf(" b:Data is available now. %d\n", retval);
+			} else {
 
 				printf(" b:select Data is not available now.\n");
 				continue;
@@ -412,7 +412,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		printf("  b:op N: %d\n", n);
+		//printf("  b:op N: %d\n", n);
 		pgs = line;
 			*line = '0';
 
@@ -430,6 +430,7 @@ int main(int argc, char **argv)
 		int readn = read(STDIN_FILENO, line, MAXLINE - 1);
 		if (readn > 0) {
 			printf(" b:line recieved: '%s'\n", pgs);
+			//split string: numbers are on each line.
 			do {
 				if (haveResultNumToWrite)
 					printf(" b: transmitting number skipped : %lu. Reason: c was busy\n", isqr);
