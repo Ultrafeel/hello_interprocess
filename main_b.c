@@ -373,13 +373,12 @@ int main(int argc, char **argv)
 	int n = -1;
 
 	char * pgs = 0;
-	bool haveResultNumToWrite = 0;
 
 	unsigned long int isqr = -1;
 	while (!terminate_flag) {
 		
 		/* Wait up to five seconds. */
-		int const timeInSec = (haveResultNumToWrite ? 1: 5);
+		int const timeInSec = 5;
 		tv.tv_sec = timeInSec;
 		tv.tv_usec = 0;
 		errno = 0;
@@ -388,8 +387,10 @@ int main(int argc, char **argv)
 		retval = select(STDIN_FILENO + 1, &rset, NULL, NULL, &tv);
 
 		if (retval == -1) {
-			if (EINTR == errno)
+			if (EINTR == errno) {
+				//проверим флаг. 
 				continue;
+			}
 			err_show("select()");
 			continue;
 		} else if (retval > 0)
@@ -409,14 +410,6 @@ int main(int argc, char **argv)
 		pgs = line;
 			*line = '0';
 
-		if (haveResultNumToWrite == 1) {
-			printf(" b:!!write pending num square: %lu\n", isqr);
-
-			if (0 != write_to_shared(isqr)) {
-				haveResultNumToWrite = 0;
-				isqr = -1;
-			}
-		}
 
 		errno = 0;
 		//fgets(line, MAXLINE, stdin);
@@ -425,20 +418,18 @@ int main(int argc, char **argv)
 			printf(" b:line recieved: '%s'\n", pgs);
 			//split string: numbers are on each line.
 			do {
-				if (haveResultNumToWrite)
-					printf(" b: transmitting number skipped : %lu. Reason: c was busy\n", isqr);
 				i = atoi(pgs);
 				printf(" b:num recieved: %d\n", i);
 				isqr = i*i;
 
-				haveResultNumToWrite = 1;
 
 				printf(" b:num square: %lu\n", isqr);
 
-				if (0 != write_to_shared(isqr))
+				if (0 != write_to_shared(isqr)) {
+					printf(" b: transmitting number skipped : %lu. Reason: c was busy\n", isqr);
 					continue;
+				}
 
-				haveResultNumToWrite = 0;
 			} while ((pgs = strchr(pgs, '\n')) 
 				&& (++pgs, (pgs < (line + readn))) && !terminate_flag);
 
