@@ -290,7 +290,7 @@ void proc_c(const pid_t bpid) {
 			g_ptr_sh_mem->flag = false;
 	
 			sem_post(&g_ptr_sh_mem->buff_is_free_sem);
-			
+			//simulate busy : sleep(5);
 			pthread_kill( c2_tid, signumForC2Notification);
 			if (MAGIC_NUMBER == g_square_recieved)
 				kill(bpid, SIGUSR1);	//getppid()
@@ -359,30 +359,30 @@ int main(int argc, char **argv)
 	setvbuf(stdin, NULL, _IONBF, 0);
 
 	setvbuf(stdout, NULL, _IONBF, 0);
-	char line[MAXLINE] = "";
 
 	int n = -1;
-
-	char * pgs = 0;
 
 	unsigned long int isqr = -1;
 	while (!terminate_flag) {
 		
-
-
-		//printf("  b:op N: %d\n", n);
-		pgs = line;
-			*line = '0';
-
-
+		int i = -1;
 		errno = 0;
 		//fgets(line, MAXLINE, stdin);
-		int readn = read(STDIN_FILENO, line, MAXLINE - 1);
-		if (readn > 0) {
-			printf(" b:line recieved: '%s'\n", pgs);
-			//split string: numbers are on each line.
-			do {
-				int i = atoi(pgs);
+		int readn = scanf("%d", &i);
+		if (readn == EOF) {
+			if (ferror(stdin)) {
+				if (EINTR == errno) {
+					continue;
+				} else {
+					err_show(" b:scanf");
+					break;
+				}
+			} else {
+				printf(" b:STDIN eof  zero \n");
+				break;
+			}
+		} else if (1 == readn)
+		{
 				printf(" b:num recieved: %d\n", i);
 				isqr = i*i;
 
@@ -393,17 +393,11 @@ int main(int argc, char **argv)
 					printf(" b: transmitting number skipped : %lu. Reason: c was busy\n", isqr);
 					continue;
 				}
-
-			} while ((pgs = strchr(pgs, '\n')) 
-				&& (++pgs, (pgs < (line + readn))) && !terminate_flag);
-
-		} else if (readn < 0)
-			err_show(" read");
-		else {
-			printf(" STDIN eof  zero \n");
-			break;
+		} 
+		else 
+		{
+			printf(" b:scanf nothing converted \n");
 		}
-
 		++n;
 	};
 	printf(" process b exit\n");
