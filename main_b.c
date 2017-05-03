@@ -131,26 +131,19 @@ int timed_wait_sem(sem_t * sem)
 {
 	int err = -1;
 	struct timespec tout;
-	struct tm *tmp;
 	clock_gettime(CLOCK_REALTIME, &tout);
-	tmp = localtime(&tout.tv_sec);
-	char buf[64];
-	strftime(buf, sizeof(buf), "%r", tmp);
-	printf("текущее время: %s\n", buf);
-	tout.tv_sec += 5; /* 10 се­кунд, на­чи­ная от те­ку­ще­го вре­ме­ни */
+
+	tout.tv_sec += 5; /* добавим се­кунд, начиная от текущего времени */
 
 	err = sem_timedwait(sem, &tout);
-	clock_gettime(CLOCK_REALTIME, &tout);
-	tmp = localtime(&tout.tv_sec);
-	strftime(buf, sizeof(buf), "%r", tmp);
-	printf("текущее время: %s\n", buf);
+
 	if (err == 0)
-		wprintf(L"sem заперт!\n");
+		printf("sem заперт!\n");
 	else
 	{
-		wprintf(L"не получилось  запереть sem: %d\n", err);
+		printf("не получилось  запереть sem: %d\n", err);
 		if (ETIMEDOUT == err)
-			wprintf(L"ETIMEDOUT");
+			printf("ETIMEDOUT");
 		printf("\n");
 			
 	}
