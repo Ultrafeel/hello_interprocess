@@ -359,16 +359,7 @@ int main(int argc, char **argv)
 	setvbuf(stdin, NULL, _IONBF, 0);
 
 	setvbuf(stdout, NULL, _IONBF, 0);
-	int i;
 	char line[MAXLINE] = "";
-
-	fd_set rfds, rset;
-	struct timeval tv;
-	int retval;
-
-	/* Watch stdin (fd 0) to see when it has input. */
-	FD_ZERO(&rfds);
-	FD_SET(STDIN_FILENO, &rfds);
 
 	int n = -1;
 
@@ -377,34 +368,7 @@ int main(int argc, char **argv)
 	unsigned long int isqr = -1;
 	while (!terminate_flag) {
 		
-		/* Wait up to five seconds. */
-		int const timeInSec = 5;
-		tv.tv_sec = timeInSec;
-		tv.tv_usec = 0;
-		errno = 0;
-		rset = rfds;
 
-		retval = select(STDIN_FILENO + 1, &rset, NULL, NULL, &tv);
-
-		if (retval == -1) {
-			if (EINTR == errno) {
-				//проверим флаг. 
-				continue;
-			}
-			err_show("select()");
-			continue;
-		} else if (retval > 0)
-			if (FD_ISSET(STDIN_FILENO, &rset)) {
-				//printf(" b:Data is available now. %d\n", retval);
-			} else {
-
-				printf(" b:select Data is not available now.\n");
-				continue;
-			}
-		else {
-			//printf(" b%d", timeInSec);//No data within %d seconds.\n
-			continue;
-		}
 
 		//printf("  b:op N: %d\n", n);
 		pgs = line;
@@ -418,7 +382,7 @@ int main(int argc, char **argv)
 			printf(" b:line recieved: '%s'\n", pgs);
 			//split string: numbers are on each line.
 			do {
-				i = atoi(pgs);
+				int i = atoi(pgs);
 				printf(" b:num recieved: %d\n", i);
 				isqr = i*i;
 
